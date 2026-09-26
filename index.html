@@ -4,26 +4,26 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Budget Tracker Real-Time</title>
-    <!-- Web App Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="theme-color" content="#2563eb" />
+    <title>Gestione Spese</title>
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             colors: {
-              brand: "#2563eb",
+              primary: "#3b82f6",
               income: "#10b981",
               expense: "#ef4444",
             },
@@ -31,413 +31,418 @@
         },
       };
     </script>
-
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-
-    <style>
-      body {
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-      .drawer {
-        transition: transform 0.3s ease-in-out;
-      }
-      .fab-menu {
-        transition:
-          opacity 0.2s ease,
-          transform 0.2s ease;
-      }
-    </style>
   </head>
   <body
-    class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-slate-100 font-sans min-h-screen flex flex-col"
+    class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen pb-24 font-sans select-none"
   >
-    <!-- HEADER SUPERIORE -->
+    <!-- HEADER -->
     <header
-      class="sticky top-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between shadow-sm"
+      class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-sm"
     >
       <div class="flex items-center gap-3">
         <button
           id="open-menu-btn"
-          class="p-2 rounded-lg text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+          class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl"
         >
-          <i class="fa-solid fa-bars text-xl"></i>
+          <i class="fa-solid fa-bars text-lg"></i>
         </button>
-        <h1 id="header-title" class="text-lg font-bold">Bilancio</h1>
+        <h1 class="font-extrabold text-lg tracking-tight">Gestione Spese</h1>
       </div>
 
-      <!-- Selettore Utente -->
-      <select
-        id="user-selector"
-        class="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-sm rounded-xl px-3 py-1.5 font-semibold focus:outline-none focus:ring-2 focus:ring-brand"
+      <!-- Selettore Utente con Indicatore Colore -->
+      <div
+        class="flex items-center gap-2 bg-gray-100 dark:bg-slate-700 py-1.5 px-3 rounded-xl"
       >
-        <!-- Popolato via Firestore -->
-      </select>
+        <div
+          id="user-badge-color"
+          class="w-3.5 h-3.5 rounded-full border border-black/10 transition-colors"
+        ></div>
+        <select
+          id="user-selector"
+          class="bg-transparent text-xs font-bold border-none outline-none cursor-pointer"
+        >
+          <!-- Generato dinamicamente -->
+        </select>
+      </div>
     </header>
 
-    <!-- MENU LATERALE (DRAWER) -->
+    <!-- DRAWER / MENU LATERALE -->
     <div
       id="drawer-overlay"
-      class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity"
+      class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity"
     ></div>
     <aside
       id="drawer"
-      class="drawer fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-slate-800 z-50 shadow-2xl flex flex-col -translate-x-full"
+      class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-slate-800 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between p-5 shadow-2xl"
     >
-      <div
-        class="p-5 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between bg-brand text-white"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-lg"
-          >
-            <i class="fa-solid fa-wallet"></i>
-          </div>
+      <div class="space-y-6">
+        <div
+          class="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-slate-700"
+        >
           <div>
-            <h2 class="font-bold text-base">Budget Manager</h2>
-            <p class="text-xs text-blue-100" id="drawer-current-user">
+            <h2 class="font-bold text-base">Menu</h2>
+            <p
+              id="drawer-current-user"
+              class="text-xs text-gray-400 font-semibold"
+            >
               Nessun utente
             </p>
           </div>
+          <button
+            id="close-menu-btn"
+            class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+          >
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
         </div>
-        <button id="close-menu-btn" class="text-white/80 hover:text-white">
-          <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
+
+        <nav id="nav-container" class="space-y-1">
+          <a
+            href="#"
+            data-page="dashboard"
+            class="nav-item flex items-center gap-3 p-3 rounded-2xl bg-primary/10 text-primary font-bold text-sm"
+          >
+            <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+          </a>
+          <a
+            href="#"
+            data-page="transactions"
+            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
+          >
+            <i class="fa-solid fa-receipt w-5"></i> Movimenti
+          </a>
+          <a
+            href="#"
+            data-page="categories"
+            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
+          >
+            <i class="fa-solid fa-tags w-5"></i> Categorie
+          </a>
+          <a
+            href="#"
+            data-page="accounts"
+            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
+          >
+            <i class="fa-solid fa-wallet w-5"></i> Conti & Carte
+          </a>
+          <a
+            href="#"
+            data-page="debts"
+            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
+          >
+            <i class="fa-solid fa-hand-holding-dollar w-5"></i> Debiti & Crediti
+          </a>
+          <a
+            href="#"
+            data-page="settings"
+            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
+          >
+            <i class="fa-solid fa-gear w-5"></i> Impostazioni
+          </a>
+        </nav>
       </div>
 
-      <nav class="flex-1 overflow-y-auto p-3 space-y-1" id="nav-container">
-        <a
-          href="#"
-          data-page="home"
-          class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl bg-brand/10 text-brand font-bold"
-        >
-          <i class="fa-solid fa-chart-pie w-5"></i> Bilancio
-        </a>
-        <a
-          href="#"
-          data-page="transactions"
-          class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 font-medium"
-        >
-          <i class="fa-solid fa-list-check w-5"></i> Transazioni
-        </a>
-        <a
-          href="#"
-          data-page="accounts"
-          class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 font-medium"
-        >
-          <i class="fa-solid fa-credit-card w-5"></i> Conti & Carte
-        </a>
-        <a
-          href="#"
-          data-page="categories"
-          class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 font-medium"
-        >
-          <i class="fa-solid fa-tags w-5"></i> Categorie
-        </a>
-        <a
-          href="#"
-          data-page="debts"
-          class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 font-medium"
-        >
-          <i class="fa-solid fa-hand-holding-dollar w-5"></i> Debiti / Crediti
-        </a>
-        <a
-          href="#"
-          data-page="settings"
-          class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 font-medium"
-        >
-          <i class="fa-solid fa-gear w-5"></i> Impostazioni
-        </a>
-      </nav>
+      <div
+        class="text-xs text-center text-gray-400 font-semibold pt-4 border-t border-gray-100 dark:border-slate-700"
+      >
+        v2.0 • Realtime Firebase
+      </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 p-4 pb-24 max-w-lg mx-auto w-full">
+    <!-- CONTENUTO PRINCIPALE -->
+    <main class="max-w-md mx-auto p-4 space-y-6">
+      <!-- AVVISO NESSUN UTENTE -->
       <div
         id="no-user-banner"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl mb-4 text-center space-y-2"
+        class="hidden p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-700 dark:text-amber-400 text-xs font-semibold text-center space-y-2"
       >
-        <i class="fa-solid fa-circle-exclamation text-2xl text-amber-500"></i>
-        <p class="text-sm font-semibold">Nessun profilo utente selezionato.</p>
+        <p>
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i> Nessun utente
+          creato.
+        </p>
+        <p>
+          Vai nella sezione <strong>Impostazioni</strong> per creare il tuo
+          primo profilo utente.
+        </p>
       </div>
 
-      <!-- HOME PAGE / BILANCIO -->
-      <section id="page-home" class="space-y-4">
+      <!-- SEZIONE: DASHBOARD -->
+      <section id="page-dashboard" class="space-y-6">
+        <!-- CARD SALDO TOTALE -->
         <div
-          class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-slate-700 space-y-3"
+          class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-4"
         >
+          <div class="flex justify-between items-center">
+            <span
+              class="text-xs font-bold uppercase tracking-wider text-gray-400"
+              >Saldo Totale</span
+            >
+            <span id="summary-total" class="font-bold text-lg text-income"
+              >0.00 €</span
+            >
+          </div>
+
+          <!-- GRAFICO DOUGHNUT -->
+          <div class="relative h-44 flex items-center justify-center">
+            <canvas id="balanceChart"></canvas>
+          </div>
+
+          <!-- ENTRATE / USCITE RECAP -->
           <div
-            class="relative flex items-center justify-center border-b border-gray-50 dark:border-slate-700/50 pb-2"
+            class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-50 dark:border-slate-700/50"
           >
-            <h2
-              class="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white"
-            >
-              Bilancio
-            </h2>
+            <div class="p-3 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl">
+              <span
+                class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase"
+                >Entrate</span
+              >
+              <p
+                id="summary-income"
+                class="font-extrabold text-sm text-emerald-600 dark:text-emerald-400"
+              >
+                0.00 €
+              </p>
+            </div>
+            <div class="p-3 bg-rose-50 dark:bg-rose-900/10 rounded-2xl">
+              <span
+                class="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase"
+                >Uscite</span
+              >
+              <p
+                id="summary-expense"
+                class="font-extrabold text-sm text-rose-600 dark:text-rose-400"
+              >
+                0.00 €
+              </p>
+            </div>
           </div>
+        </div>
 
-          <div class="grid grid-cols-12 items-center gap-2 pt-1">
-            <div class="col-span-5 flex flex-col items-center justify-center">
-              <div
-                id="current-month-label"
-                class="text-sm font-extrabold text-gray-900 dark:text-white mb-2 text-center"
-              >
-                Settembre 2026
-              </div>
-              <div class="h-28 w-28 flex items-center justify-center">
-                <canvas id="balanceChart"></canvas>
-              </div>
-            </div>
-            <div
-              class="col-span-7 space-y-1.5 text-right pl-2 font-medium self-end"
-            >
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-800 dark:text-slate-200 font-semibold"
-                  >Entrate:</span
-                >
-                <span id="summary-income" class="text-income font-semibold"
-                  >0,00 €</span
-                >
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-800 dark:text-slate-200 font-semibold"
-                  >Uscite:</span
-                >
-                <span id="summary-expense" class="text-expense font-semibold"
-                  >0,00 €</span
-                >
-              </div>
-              <div
-                class="flex justify-between items-center text-sm pt-1 border-t border-gray-100 dark:border-slate-700"
-              >
-                <span class="text-gray-800 dark:text-slate-200 font-bold"
-                  >Totale:</span
-                >
-                <span id="summary-total" class="font-bold">0,00 €</span>
-              </div>
-            </div>
+        <!-- ULTIMI MOVIMENTI -->
+        <div class="space-y-3">
+          <div class="flex justify-between items-center px-1">
+            <h3 class="font-bold text-sm">Ultimi Movimenti</h3>
+          </div>
+          <div id="transactions-list" class="space-y-2">
+            <!-- Popolato dinamicamente -->
           </div>
         </div>
       </section>
 
-      <!-- TRANSAZIONI -->
-      <section id="page-transactions" class="hidden space-y-3">
-        <h2 class="text-lg font-bold">Storico Transazioni</h2>
-        <div id="transactions-list" class="space-y-2"></div>
-      </section>
-
-      <!-- CONTI & CARTE -->
-      <section id="page-accounts" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold">Conti e Carte</h2>
-          <button
-            id="add-account-btn"
-            class="bg-brand text-white px-3 py-1.5 rounded-xl text-xs font-bold"
-          >
-            + Nuovo Conto
-          </button>
+      <!-- SEZIONE: MOVIMENTI -->
+      <section id="page-transactions" class="hidden space-y-4">
+        <h2 class="font-extrabold text-lg">Tutti i Movimenti</h2>
+        <div id="transactions-full-list" class="space-y-2">
+          <!-- Popolato dinamicamente -->
         </div>
-        <div id="accounts-list" class="space-y-2"></div>
       </section>
 
-      <!-- CATEGORIE -->
+      <!-- SEZIONE: CATEGORIE -->
       <section id="page-categories" class="hidden space-y-4">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold">Categorie</h2>
+          <h2 class="font-extrabold text-lg">Categorie</h2>
           <button
             id="add-category-btn"
-            class="bg-brand text-white px-3 py-1.5 rounded-xl text-xs font-bold"
+            class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm"
           >
-            + Nuova Categoria
+            <i class="fa-solid fa-plus"></i> Nuova
           </button>
         </div>
-        <div id="categories-list" class="grid grid-cols-2 gap-2"></div>
+        <div id="categories-list" class="grid grid-cols-2 gap-3">
+          <!-- Popolato dinamicamente -->
+        </div>
       </section>
 
-      <!-- DEBITI E CREDITI -->
+      <!-- SEZIONE: CONTI & CARTE -->
+      <section id="page-accounts" class="hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h2 class="font-extrabold text-lg">Conti & Carte</h2>
+          <button
+            id="add-account-btn"
+            class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm"
+          >
+            <i class="fa-solid fa-plus"></i> Nuovo Conto
+          </button>
+        </div>
+        <div id="accounts-list" class="space-y-2">
+          <!-- Popolato dinamicamente -->
+        </div>
+      </section>
+
+      <!-- SEZIONE: DEBITI & CREDITI -->
       <section id="page-debts" class="hidden space-y-4">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold">Debiti & Crediti</h2>
+          <h2 class="font-extrabold text-lg">Debiti & Crediti</h2>
           <button
             id="add-debt-btn"
-            class="bg-brand text-white px-3 py-1.5 rounded-xl text-xs font-bold"
+            class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm"
           >
-            + Nuovo Elemento
+            <i class="fa-solid fa-plus"></i> Nuovo
           </button>
         </div>
-        <div id="debts-list" class="space-y-3"></div>
+        <div id="debts-list" class="space-y-3">
+          <!-- Popolato dinamicamente -->
+        </div>
       </section>
 
-      <!-- IMPOSTAZIONI -->
-      <section id="page-settings" class="hidden space-y-4">
-        <h2 class="text-lg font-bold mb-2">Impostazioni</h2>
+      <!-- SEZIONE: IMPOSTAZIONI -->
+      <section id="page-settings" class="hidden space-y-6">
+        <h2 class="font-extrabold text-lg">Impostazioni</h2>
 
+        <!-- GESTIONE UTENTI -->
         <div
-          class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-slate-700 space-y-4"
+          class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-4"
         >
-          <h3 class="text-sm font-bold text-gray-500 dark:text-slate-400">
-            Gestione Profili Utenti
-          </h3>
-          <div id="users-manager-list" class="space-y-2"></div>
+          <h3 class="font-bold text-sm">Gestione Utenti</h3>
 
+          <!-- Form Creazione Nuovo Utente con Selettore Colore -->
           <div
-            class="flex gap-2 pt-2 border-t border-gray-100 dark:border-slate-700"
+            class="space-y-3 p-3 bg-gray-50 dark:bg-slate-700/40 rounded-2xl"
           >
-            <input
-              type="text"
-              id="new-user-input"
-              placeholder="Nome nuovo utente..."
-              class="flex-1 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-xl text-sm p-2.5 focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-            <button
-              id="add-user-btn"
-              class="bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition"
+            <label class="text-xs text-gray-400 font-semibold block"
+              >Nuovo Utente</label
             >
-              Crea
-            </button>
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                id="new-user-input"
+                placeholder="Nome utente"
+                class="flex-1 p-3 bg-white dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+              />
+              <input
+                type="color"
+                id="new-user-color-input"
+                value="#3b82f6"
+                title="Scegli il colore del profilo"
+                class="w-11 h-11 rounded-xl cursor-pointer bg-transparent border-none"
+              />
+              <button
+                id="add-user-btn"
+                class="bg-primary text-white font-bold text-xs px-4 h-11 rounded-xl flex items-center gap-1 shadow-sm"
+              >
+                <i class="fa-solid fa-plus"></i> Crea
+              </button>
+            </div>
+          </div>
+
+          <div id="users-manager-list" class="space-y-2 pt-2">
+            <!-- Popolato dinamicamente -->
           </div>
         </div>
       </section>
     </main>
 
-    <!-- FAB BUTTON -->
-    <div class="fixed bottom-6 right-6 z-30 flex flex-col items-end">
+    <!-- FAB / BOTTONE FLOTTANTE AZIONI -->
+    <div class="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
       <div
         id="fab-options"
-        class="fab-menu opacity-0 pointer-events-none scale-90 transition-all duration-200 flex flex-col gap-3 mb-3 items-end"
+        class="flex flex-col items-end gap-2 opacity-0 pointer-events-none transition-all duration-200"
       >
-        <button id="btn-add-income" class="flex items-center gap-3">
-          <span
-            class="bg-white dark:bg-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg shadow-md text-gray-700 dark:text-slate-200"
-            >Entrata</span
-          >
-          <div
-            class="w-12 h-12 rounded-2xl bg-income text-white flex items-center justify-center shadow-lg text-xl font-bold"
-          >
-            <i class="fa-solid fa-plus"></i>
-          </div>
+        <button
+          id="btn-add-income"
+          class="flex items-center gap-2 bg-emerald-500 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-lg hover:scale-105 transition-transform"
+        >
+          <i class="fa-solid fa-arrow-down"></i> Entrata
         </button>
-        <button id="btn-add-expense" class="flex items-center gap-3">
-          <span
-            class="bg-white dark:bg-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg shadow-md text-gray-700 dark:text-slate-200"
-            >Uscita</span
-          >
-          <div
-            class="w-12 h-12 rounded-2xl bg-expense text-white flex items-center justify-center shadow-lg text-xl font-bold"
-          >
-            <i class="fa-solid fa-minus"></i>
-          </div>
+        <button
+          id="btn-add-expense"
+          class="flex items-center gap-2 bg-rose-500 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-lg hover:scale-105 transition-transform"
+        >
+          <i class="fa-solid fa-arrow-up"></i> Uscita
         </button>
       </div>
-
       <button
         id="fab-main"
-        class="w-14 h-14 rounded-2xl bg-brand text-white shadow-xl flex items-center justify-center text-2xl active:scale-95 transition"
+        class="w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center text-xl font-bold hover:scale-105 transition-transform"
       >
-        <i
-          class="fa-solid fa-plus transition-transform duration-200"
-          id="fab-icon"
-        ></i>
+        <i class="fa-solid fa-plus"></i>
       </button>
     </div>
 
-    <!-- MODALI -->
+    <!-- MODALI / POPUP MODIFICHE E CREAZIONI -->
+
+    <!-- MODALE TRANSAZIONE -->
     <div
       id="transaction-modal"
-      class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4"
+      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
     >
       <div
-        class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl"
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto"
       >
-        <div
-          class="flex justify-between items-center border-b border-gray-100 dark:border-slate-700 pb-3"
-        >
-          <h3 id="modal-title" class="font-bold text-lg">Nuova Transazione</h3>
-          <button
-            id="close-modal-btn"
-            class="text-gray-400 hover:text-gray-600"
-          >
-            <i class="fa-solid fa-xmark text-xl"></i>
+        <div class="flex justify-between items-center">
+          <h3 id="modal-title" class="text-lg font-bold">Nuova Transazione</h3>
+          <button id="close-modal-btn" class="text-gray-400 p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
           </button>
         </div>
-
-        <form id="transaction-form" class="space-y-4">
+        <form id="transaction-form" class="space-y-3">
           <input type="hidden" id="tx-type" value="expense" />
-
           <div>
             <label class="text-xs text-gray-400 block mb-1">Importo (€)</label>
             <input
               type="number"
               step="0.01"
               id="tx-amount"
-              placeholder="0,00"
               required
-              class="w-full text-3xl font-extrabold bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl p-3 text-center focus:outline-none focus:ring-2 focus:ring-brand"
+              placeholder="0.00"
+              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-lg font-bold border-none focus:ring-2 focus:ring-primary outline-none"
             />
           </div>
-
-          <div id="party-container">
-            <label id="party-label" class="text-xs text-gray-400 block mb-1"
-              >A chi (Destinatario)</label
+          <div>
+            <label class="text-xs text-gray-400 block mb-1"
+              >Destinatario / Mittente</label
             >
             <input
               type="text"
               id="tx-party"
-              class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2.5 text-sm"
+              placeholder="Es. Supermercato, Stipendio"
+              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
             />
           </div>
-
           <div>
             <label class="text-xs text-gray-400 block mb-1">Categoria</label>
             <div
               id="modal-category-grid"
-              class="grid grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1"
-            ></div>
+              class="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto p-1"
+            >
+              <!-- Popolato dinamicamente -->
+            </div>
             <input type="hidden" id="tx-category" required />
           </div>
-
           <div>
             <label class="text-xs text-gray-400 block mb-1"
               >Conto / Carta</label
             >
             <select
               id="tx-account"
-              class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2.5 text-sm"
-            ></select>
+              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+            >
+              <!-- Popolato dinamicamente -->
+            </select>
           </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-xs text-gray-400 block mb-1">Data</label>
-              <input
-                type="date"
-                id="tx-date"
-                required
-                class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2.5 text-xs"
-              />
-            </div>
-            <div>
-              <label class="text-xs text-gray-400 block mb-1">Note</label>
-              <input
-                type="text"
-                id="tx-note"
-                placeholder="Opzionale..."
-                class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2.5 text-xs"
-              />
-            </div>
+          <div>
+            <label class="text-xs text-gray-400 block mb-1">Data</label>
+            <input
+              type="date"
+              id="tx-date"
+              required
+              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+            />
           </div>
-
+          <div>
+            <label class="text-xs text-gray-400 block mb-1"
+              >Note (Opzionale)</label
+            >
+            <input
+              type="text"
+              id="tx-note"
+              placeholder="Dettagli aggiuntivi"
+              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+            />
+          </div>
           <button
             type="submit"
-            class="w-full py-3 bg-brand text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition"
+            class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm shadow-md mt-2"
           >
             Salva Transazione
           </button>
@@ -448,41 +453,30 @@
     <!-- MODALE CATEGORIA -->
     <div
       id="modal-category-form"
-      class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4"
+      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
     >
       <div
-        class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl"
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
       >
-        <div
-          class="flex justify-between items-center border-b border-gray-100 dark:border-slate-700 pb-2"
-        >
-          <h3 id="cat-modal-title" class="font-bold text-base">
-            Gestisci Categoria
-          </h3>
-          <button
-            onclick="closeCustomModal('modal-category-form')"
-            class="text-gray-400"
-          >
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
-        </div>
+        <h3 class="text-lg font-bold">Nuova Categoria</h3>
         <input type="hidden" id="cat-edit-id" />
         <div>
           <label class="text-xs text-gray-400 block mb-1">Nome Categoria</label>
           <input
             type="text"
             id="cat-name-input"
-            class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2 text-sm"
+            placeholder="Es. Spesa, Svago"
+            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
           />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-xs text-gray-400 block mb-1">Emoji</label>
+            <label class="text-xs text-gray-400 block mb-1">Emoji Icona</label>
             <input
               type="text"
               id="cat-emoji-input"
-              placeholder="🛒"
-              class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2 text-center text-lg"
+              value="📦"
+              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-center text-lg border-none focus:ring-2 focus:ring-primary outline-none"
             />
           </div>
           <div>
@@ -490,30 +484,181 @@
             <input
               type="color"
               id="cat-color-input"
-              class="w-full h-10 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-1 cursor-pointer"
+              value="#3b82f6"
+              class="w-full h-11 rounded-xl cursor-pointer"
             />
           </div>
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">Tipo Movimento</label>
+          <label class="text-xs text-gray-400 block mb-1">Tipo</label>
           <select
             id="cat-type-input"
-            class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl p-2 text-sm"
+            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="expense">Uscita</option>
             <option value="income">Entrata</option>
           </select>
         </div>
-        <button
-          id="save-cat-btn"
-          class="w-full py-2.5 bg-brand text-white rounded-xl font-bold text-sm shadow-md hover:bg-blue-700 transition"
-        >
-          Salva Categoria
-        </button>
+        <div class="flex gap-2 pt-2">
+          <button
+            type="button"
+            onclick="closeCustomModal('modal-category-form')"
+            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
+          >
+            Annulla
+          </button>
+          <button
+            type="button"
+            id="save-cat-btn"
+            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
+          >
+            Salva
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- SCRIPT FIREBASE CON SINCRONIZZAZIONE COMPLETA REAL-TIME -->
+    <!-- MODALE CONTO / CARTA -->
+    <div
+      id="modal-account-form"
+      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
+      >
+        <h3 id="modal-account-title" class="text-lg font-bold">
+          Nuovo Conto / Carta
+        </h3>
+        <input type="hidden" id="account-edit-id" />
+        <div>
+          <label class="text-xs text-gray-400 block mb-1"
+            >Nome Conto o Carta</label
+          >
+          <input
+            type="text"
+            id="account-name-input"
+            placeholder="Es. Revolut, Intesa, Contanti"
+            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+          />
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button
+            type="button"
+            onclick="closeCustomModal('modal-account-form')"
+            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
+          >
+            Annulla
+          </button>
+          <button
+            type="button"
+            id="save-account-btn"
+            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
+          >
+            Salva
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALE DEBITO / CREDITO -->
+    <div
+      id="modal-debt-form"
+      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
+      >
+        <h3 id="modal-debt-title" class="text-lg font-bold">
+          Nuovo Debito / Credito
+        </h3>
+        <input type="hidden" id="debt-edit-id" />
+        <div>
+          <label class="text-xs text-gray-400 block mb-1">Descrizione</label>
+          <input
+            type="text"
+            id="debt-title-input"
+            placeholder="Es. Prestito Luca"
+            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+          />
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 block mb-1"
+            >Importo Totale (€)</label
+          >
+          <input
+            type="number"
+            step="0.01"
+            id="debt-target-input"
+            placeholder="100.00"
+            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+          />
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button
+            type="button"
+            onclick="closeCustomModal('modal-debt-form')"
+            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
+          >
+            Annulla
+          </button>
+          <button
+            type="button"
+            id="save-debt-btn"
+            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
+          >
+            Salva
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALE MODIFICA UTENTE -->
+    <div
+      id="modal-user-edit-form"
+      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
+      >
+        <h3 class="text-lg font-bold">Modifica Utente</h3>
+        <input type="hidden" id="user-original-name" />
+        <div>
+          <label class="text-xs text-gray-400 block mb-1">Nome Utente</label>
+          <input
+            type="text"
+            id="user-edit-name-input"
+            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+          />
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 block mb-1">Colore Profilo</label>
+          <input
+            type="color"
+            id="user-edit-color-input"
+            value="#3b82f6"
+            class="w-full h-11 rounded-xl cursor-pointer bg-transparent border-none"
+          />
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button
+            type="button"
+            onclick="closeCustomModal('modal-user-edit-form')"
+            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
+          >
+            Annulla
+          </button>
+          <button
+            type="button"
+            id="save-user-edit-btn"
+            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
+          >
+            Salva
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT CON FIREBASE -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
       import {
@@ -524,12 +669,11 @@
         onValue,
       } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-      // Configurazione con l'URL del tuo Realtime Database
       const firebaseConfig = {
         apiKey: "AIzaSyD_tWdvjxOCFfbPADpGGzSfJ6MRz4O3rzM",
         authDomain: "gestione-spese-84.firebaseapp.com",
         databaseURL:
-          "https://gestione-spese-84-default-rtdb.europe-west1.firebasedatabase.app", // <-- FONDAMENTALE PER LA SINCRONIZZAZIONE
+          "https://gestione-spese-84-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "gestione-spese-84",
         storageBucket: "gestione-spese-84.firebasestorage.app",
         messagingSenderId: "375465380274",
@@ -551,16 +695,21 @@
       let balanceChart = null;
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Data odierna di default per transazioni
+        document.getElementById("tx-date").value = new Date()
+          .toISOString()
+          .split("T")[0];
+
         initChart();
         setupNavigation();
         setupForms();
         listenAllRealtimeDatabaseNodes();
 
-        // Evento selettore utente
         document
           .getElementById("user-selector")
           .addEventListener("change", (e) => {
             state.currentUser = e.target.value;
+            updateUserBadgeColor();
             document.getElementById("drawer-current-user").textContent =
               state.currentUser;
             updateChartAndCard();
@@ -598,16 +747,18 @@
         });
       }
 
-      // LISTENERS IN TEMPO REALE
       function listenAllRealtimeDatabaseNodes() {
-        // Utenti
+        // UTENTI
         onValue(ref(db, "users"), (snapshot) => {
           const data = snapshot.val() || {};
-          state.users = Object.keys(data);
+          state.users = Object.keys(data).map((key) => ({
+            name: key,
+            color: data[key].color || "#3b82f6",
+          }));
           updateUsersDropdown();
         });
 
-        // Transazioni
+        // TRANSAZIONI
         onValue(ref(db, "transactions"), (snapshot) => {
           const data = snapshot.val() || {};
           state.transactions = Object.keys(data).map((key) => ({
@@ -618,7 +769,7 @@
           renderTransactionsList();
         });
 
-        // Categorie
+        // CATEGORIE
         onValue(ref(db, "categories"), (snapshot) => {
           const data = snapshot.val() || {};
           state.categories = Object.keys(data).map((key) => ({
@@ -628,7 +779,7 @@
           renderCategoriesList();
         });
 
-        // Conti
+        // CONTI
         onValue(ref(db, "accounts"), (snapshot) => {
           const data = snapshot.val() || {};
           state.accounts = Object.keys(data).map((key) => ({
@@ -638,7 +789,7 @@
           renderAccountsList();
         });
 
-        // Debiti
+        // DEBITI
         onValue(ref(db, "debts"), (snapshot) => {
           const data = snapshot.val() || {};
           state.debts = Object.keys(data).map((key) => ({
@@ -649,11 +800,26 @@
         });
       }
 
+      function updateUserBadgeColor() {
+        const badge = document.getElementById("user-badge-color");
+        const activeUserObj = state.users.find(
+          (u) => u.name === state.currentUser,
+        );
+        if (activeUserObj) {
+          badge.style.backgroundColor = activeUserObj.color;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
       function updateUsersDropdown() {
         const select = document.getElementById("user-selector");
         select.innerHTML = "";
 
-        if (state.users.length === 0) {
+        const userNames = state.users.map((u) => u.name);
+
+        if (userNames.length === 0) {
           state.currentUser = null;
           const opt = document.createElement("option");
           opt.textContent = "Nessun Utente";
@@ -661,18 +827,19 @@
           document.getElementById("no-user-banner").classList.remove("hidden");
         } else {
           document.getElementById("no-user-banner").classList.add("hidden");
-          if (!state.currentUser || !state.users.includes(state.currentUser)) {
-            state.currentUser = state.users[0];
+          if (!state.currentUser || !userNames.includes(state.currentUser)) {
+            state.currentUser = userNames[0];
           }
           state.users.forEach((u) => {
             const opt = document.createElement("option");
-            opt.value = u;
-            opt.textContent = u;
-            if (u === state.currentUser) opt.selected = true;
+            opt.value = u.name;
+            opt.textContent = u.name;
+            if (u.name === state.currentUser) opt.selected = true;
             select.appendChild(opt);
           });
         }
 
+        updateUserBadgeColor();
         document.getElementById("drawer-current-user").textContent =
           state.currentUser || "Nessun utente";
         renderUsersManagerList();
@@ -680,6 +847,330 @@
         renderCategoriesList();
         renderAccountsList();
         renderDebtsList();
+      }
+
+      function setupForms() {
+        // 1. SALVA NUOVO UTENTE CON COLORE
+        document
+          .getElementById("add-user-btn")
+          .addEventListener("click", async () => {
+            const nameInput = document.getElementById("new-user-input");
+            const colorInput = document.getElementById("new-user-color-input");
+            const name = nameInput.value.trim();
+            const color = colorInput.value || "#3b82f6";
+
+            if (name) {
+              await set(ref(db, `users/${name}`), { name, color });
+              nameInput.value = "";
+              colorInput.value = "#3b82f6";
+            } else {
+              alert("Inserisci un nome utente!");
+            }
+          });
+
+        // MODIFICA UTENTE - APERTURA MODALE ED EVENTO SALVATAGGIO
+        window.openEditUserModal = function (name, color) {
+          document.getElementById("user-original-name").value = name;
+          document.getElementById("user-edit-name-input").value = name;
+          document.getElementById("user-edit-color-input").value =
+            color || "#3b82f6";
+          document
+            .getElementById("modal-user-edit-form")
+            .classList.remove("hidden");
+        };
+
+        document
+          .getElementById("save-user-edit-btn")
+          .addEventListener("click", async () => {
+            const oldName = document.getElementById("user-original-name").value;
+            const newName = document
+              .getElementById("user-edit-name-input")
+              .value.trim();
+            const newColor = document.getElementById(
+              "user-edit-color-input",
+            ).value;
+
+            if (!newName) return alert("Inserisci un nome utente valido!");
+
+            if (oldName !== newName) {
+              await remove(ref(db, `users/${oldName}`));
+            }
+
+            await set(ref(db, `users/${newName}`), {
+              name: newName,
+              color: newColor,
+            });
+            if (state.currentUser === oldName) state.currentUser = newName;
+            closeCustomModal("modal-user-edit-form");
+          });
+
+        // 2. MODALE CONTO/CARTA
+        document
+          .getElementById("add-account-btn")
+          .addEventListener("click", () => {
+            if (!state.currentUser)
+              return alert("Seleziona o crea prima un utente!");
+            document.getElementById("account-edit-id").value = "";
+            document.getElementById("account-name-input").value = "";
+            document
+              .getElementById("modal-account-form")
+              .classList.remove("hidden");
+          });
+
+        document
+          .getElementById("save-account-btn")
+          .addEventListener("click", async () => {
+            const name = document
+              .getElementById("account-name-input")
+              .value.trim();
+            const editId =
+              document.getElementById("account-edit-id").value ||
+              "acc_" + Date.now();
+            if (!name) return alert("Inserisci un nome valido!");
+
+            await set(ref(db, `accounts/${editId}`), {
+              id: editId,
+              user: state.currentUser,
+              name,
+            });
+            closeCustomModal("modal-account-form");
+          });
+
+        // 3. MODALE DEBITO/CREDITO
+        document
+          .getElementById("add-debt-btn")
+          .addEventListener("click", () => {
+            if (!state.currentUser)
+              return alert("Seleziona o crea prima un utente!");
+            document.getElementById("debt-edit-id").value = "";
+            document.getElementById("debt-title-input").value = "";
+            document.getElementById("debt-target-input").value = "";
+            document
+              .getElementById("modal-debt-form")
+              .classList.remove("hidden");
+          });
+
+        document
+          .getElementById("save-debt-btn")
+          .addEventListener("click", async () => {
+            const title = document
+              .getElementById("debt-title-input")
+              .value.trim();
+            const target = parseFloat(
+              document.getElementById("debt-target-input").value,
+            );
+            const editId =
+              document.getElementById("debt-edit-id").value ||
+              "debt_" + Date.now();
+
+            if (!title || isNaN(target))
+              return alert("Inserisci un titolo e un importo validi!");
+
+            await set(ref(db, `debts/${editId}`), {
+              id: editId,
+              user: state.currentUser,
+              title,
+              current: 0,
+              target,
+            });
+            closeCustomModal("modal-debt-form");
+          });
+
+        // 4. MODALE CATEGORIA
+        document
+          .getElementById("add-category-btn")
+          .addEventListener("click", () => {
+            if (!state.currentUser)
+              return alert("Seleziona o crea prima un utente!");
+            document.getElementById("cat-edit-id").value = "";
+            document.getElementById("cat-name-input").value = "";
+            document.getElementById("cat-emoji-input").value = "📦";
+            document
+              .getElementById("modal-category-form")
+              .classList.remove("hidden");
+          });
+
+        document
+          .getElementById("save-cat-btn")
+          .addEventListener("click", async () => {
+            const editId =
+              document.getElementById("cat-edit-id").value ||
+              "cat_" + Date.now();
+            const name = document.getElementById("cat-name-input").value.trim();
+            const emoji =
+              document.getElementById("cat-emoji-input").value.trim() || "📦";
+            const color = document.getElementById("cat-color-input").value;
+            const type = document.getElementById("cat-type-input").value;
+
+            if (!name) return alert("Inserisci un nome per la categoria!");
+
+            await set(ref(db, `categories/${editId}`), {
+              id: editId,
+              user: state.currentUser,
+              name,
+              emoji,
+              color,
+              type,
+            });
+            closeCustomModal("modal-category-form");
+          });
+
+        // 5. TRANSAZIONI
+        document
+          .getElementById("transaction-form")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!state.currentUser)
+              return alert("Seleziona prima un profilo utente!");
+
+            const id = "tx_" + Date.now();
+            const newTx = {
+              id,
+              user: state.currentUser,
+              type: document.getElementById("tx-type").value,
+              amount: parseFloat(document.getElementById("tx-amount").value),
+              party: document.getElementById("tx-party").value,
+              category: document.getElementById("tx-category").value,
+              account: document.getElementById("tx-account").value,
+              date: document.getElementById("tx-date").value,
+              note: document.getElementById("tx-note").value,
+              timestamp: new Date().toISOString(),
+            };
+            await set(ref(db, `transactions/${id}`), newTx);
+            closeModal();
+          });
+      }
+
+      function renderUsersManagerList() {
+        const container = document.getElementById("users-manager-list");
+        container.innerHTML = "";
+        state.users.forEach((u) => {
+          const div = document.createElement("div");
+          div.className =
+            "flex items-center justify-between p-2.5 bg-gray-50 dark:bg-slate-700/50 rounded-xl";
+          div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full border border-black/10" style="background-color: ${u.color};"></div>
+            <span class="text-sm font-semibold">${u.name}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openEditUserModal('${u.name}', '${u.color}')" class="text-xs text-primary font-bold p-1"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteUser('${u.name}')" class="text-xs text-expense font-bold p-1"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+          container.appendChild(div);
+        });
+      }
+
+      window.deleteUser = async function (name) {
+        if (confirm(`Eliminare l'utente ${name}?`)) {
+          await remove(ref(db, `users/${name}`));
+        }
+      };
+
+      function renderCategoriesList() {
+        const container = document.getElementById("categories-list");
+        container.innerHTML = "";
+        const userCats = state.categories.filter(
+          (c) => c.user === state.currentUser,
+        );
+
+        userCats.forEach((c) => {
+          const card = document.createElement("div");
+          card.className =
+            "flex items-center justify-between p-3 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm";
+          card.style.backgroundColor = c.color + "15";
+          card.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">${c.emoji}</span>
+            <div>
+              <p class="text-sm font-bold">${c.name}</p>
+              <span class="text-[10px] uppercase font-semibold ${c.type === "income" ? "text-income" : "text-expense"}">${c.type}</span>
+            </div>
+          </div>
+          <button onclick="deleteCategory('${c.id}')" class="text-xs text-expense p-1.5"><i class="fa-solid fa-trash"></i></button>
+        `;
+          container.appendChild(card);
+        });
+      }
+
+      window.deleteCategory = async function (id) {
+        if (confirm("Eliminare la categoria?")) {
+          await remove(ref(db, `categories/${id}`));
+        }
+      };
+
+      function renderAccountsList() {
+        const container = document.getElementById("accounts-list");
+        container.innerHTML = "";
+        const userAccs = state.accounts.filter(
+          (a) => a.user === state.currentUser,
+        );
+
+        userAccs.forEach((a) => {
+          const card = document.createElement("div");
+          card.className =
+            "flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm";
+          card.innerHTML = `
+          <span class="text-sm font-bold">${a.name}</span>
+          <button onclick="deleteAccount('${a.id}')" class="text-xs text-expense p-1.5"><i class="fa-solid fa-trash"></i></button>
+        `;
+          container.appendChild(card);
+        });
+      }
+
+      window.deleteAccount = async function (id) {
+        if (confirm("Eliminare il conto?")) {
+          await remove(ref(db, `accounts/${id}`));
+        }
+      };
+
+      function renderDebtsList() {
+        const container = document.getElementById("debts-list");
+        container.innerHTML = "";
+        const userDebts = state.debts.filter(
+          (d) => d.user === state.currentUser,
+        );
+
+        userDebts.forEach((d) => {
+          const card = document.createElement("div");
+          card.className =
+            "p-4 bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-2";
+          card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-base">${d.title}</h4>
+            <span class="text-sm font-extrabold">${d.current.toFixed(2)} / ${d.target.toFixed(2)} €</span>
+          </div>
+        `;
+          container.appendChild(card);
+        });
+      }
+
+      function renderTransactionsList() {
+        const container = document.getElementById("transactions-list");
+        const containerFull = document.getElementById("transactions-full-list");
+
+        container.innerHTML = "";
+        if (containerFull) containerFull.innerHTML = "";
+
+        const userTx = state.transactions.filter(
+          (t) => t.user === state.currentUser,
+        );
+
+        userTx.forEach((t) => {
+          const div = document.createElement("div");
+          div.className =
+            "p-3 bg-white dark:bg-slate-800 rounded-xl flex justify-between items-center shadow-sm";
+          div.innerHTML = `
+          <div>
+            <p class="font-bold text-sm">${t.category} - ${t.party || "Generico"}</p>
+            <p class="text-xs text-gray-400">${t.date}</p>
+          </div>
+          <span class="font-bold ${t.type === "income" ? "text-income" : "text-expense"}">${t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)} €</span>
+        `;
+          container.appendChild(div);
+          if (containerFull) containerFull.appendChild(div.cloneNode(true));
+        });
       }
 
       function updateChartAndCard() {
@@ -712,248 +1203,6 @@
           ];
           balanceChart.update();
         }
-      }
-
-      function setupForms() {
-        // 1. CREA UTENTE
-        document
-          .getElementById("add-user-btn")
-          .addEventListener("click", async () => {
-            const input = document.getElementById("new-user-input");
-            const name = input.value.trim();
-            if (name) {
-              await set(ref(db, `users/${name}`), { name });
-              input.value = "";
-            } else {
-              alert("Inserisci un nome utente!");
-            }
-          });
-
-        // 2. CREA CONTO / CARTA
-        document
-          .getElementById("add-account-btn")
-          .addEventListener("click", async () => {
-            if (!state.currentUser)
-              return alert("Crea prima un profilo utente nelle Impostazioni!");
-            const name = prompt(
-              "Nome del nuovo conto/carta (es. Revolut, Contanti):",
-            );
-            if (name && name.trim() !== "") {
-              const id = "acc_" + Date.now();
-              await set(ref(db, `accounts/${id}`), {
-                id,
-                user: state.currentUser,
-                name: name.trim(),
-              });
-            }
-          });
-
-        // 3. CREA DEBITO / CREDITO
-        document
-          .getElementById("add-debt-btn")
-          .addEventListener("click", async () => {
-            if (!state.currentUser)
-              return alert("Crea prima un profilo utente nelle Impostazioni!");
-            const title = prompt("Descrizione (es. Prestito Marco):");
-            if (!title || title.trim() === "") return;
-
-            const targetStr = prompt("Importo totale (€):");
-            const target = parseFloat(targetStr);
-            if (isNaN(target)) return alert("Importo non valido!");
-
-            const id = "debt_" + Date.now();
-            await set(ref(db, `debts/${id}`), {
-              id,
-              user: state.currentUser,
-              title: title.trim(),
-              current: 0,
-              target: target,
-            });
-          });
-
-        // 4. CREA CATEGORIA
-        document
-          .getElementById("add-category-btn")
-          .addEventListener("click", () => {
-            if (!state.currentUser)
-              return alert("Crea prima un profilo utente nelle Impostazioni!");
-            document.getElementById("cat-edit-id").value = "";
-            document.getElementById("cat-name-input").value = "";
-            document.getElementById("cat-emoji-input").value = "📦";
-            document
-              .getElementById("modal-category-form")
-              .classList.remove("hidden");
-          });
-
-        document
-          .getElementById("save-cat-btn")
-          .addEventListener("click", async () => {
-            const editId =
-              document.getElementById("cat-edit-id").value ||
-              "cat_" + Date.now();
-            const name = document.getElementById("cat-name-input").value.trim();
-            const emoji =
-              document.getElementById("cat-emoji-input").value.trim() || "📦";
-            const color = document.getElementById("cat-color-input").value;
-            const type = document.getElementById("cat-type-input").value;
-
-            if (!name) return alert("Inserisci un nome per la categoria!");
-
-            await set(ref(db, `categories/${editId}`), {
-              id: editId,
-              user: state.currentUser,
-              name,
-              emoji,
-              color,
-              type,
-            });
-
-            closeCustomModal("modal-category-form");
-          });
-
-        // 5. SALVA TRANSAZIONE
-        document
-          .getElementById("transaction-form")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!state.currentUser)
-              return alert("Seleziona prima un profilo utente!");
-
-            const id = "tx_" + Date.now();
-            const newTx = {
-              id,
-              user: state.currentUser,
-              type: document.getElementById("tx-type").value,
-              amount: parseFloat(document.getElementById("tx-amount").value),
-              party: document.getElementById("tx-party").value,
-              category: document.getElementById("tx-category").value,
-              account: document.getElementById("tx-account").value,
-              date: document.getElementById("tx-date").value,
-              note: document.getElementById("tx-note").value,
-              timestamp: new Date().toISOString(),
-            };
-            await set(ref(db, `transactions/${id}`), newTx);
-            closeModal();
-          });
-      }
-
-      function renderCategoriesList() {
-        const container = document.getElementById("categories-list");
-        container.innerHTML = "";
-        const userCats = state.categories.filter(
-          (c) => c.user === state.currentUser,
-        );
-
-        userCats.forEach((c) => {
-          const card = document.createElement("div");
-          card.className =
-            "flex items-center justify-between p-3 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm";
-          card.style.backgroundColor = c.color + "15";
-          card.innerHTML = `
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">${c.emoji}</span>
-          <div>
-            <p class="text-sm font-bold">${c.name}</p>
-            <span class="text-[10px] uppercase font-semibold ${c.type === "income" ? "text-income" : "text-expense"}">${c.type}</span>
-          </div>
-        </div>
-        <button onclick="deleteCategory('${c.id}')" class="text-xs text-expense p-1.5"><i class="fa-solid fa-trash"></i></button>
-      `;
-          container.appendChild(card);
-        });
-      }
-
-      window.deleteCategory = async function (id) {
-        if (confirm("Eliminare la categoria?")) {
-          await remove(ref(db, `categories/${id}`));
-        }
-      };
-
-      function renderAccountsList() {
-        const container = document.getElementById("accounts-list");
-        container.innerHTML = "";
-        const userAccs = state.accounts.filter(
-          (a) => a.user === state.currentUser,
-        );
-
-        userAccs.forEach((a) => {
-          const card = document.createElement("div");
-          card.className =
-            "flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm";
-          card.innerHTML = `
-        <span class="text-sm font-bold">${a.name}</span>
-        <button onclick="deleteAccount('${a.id}')" class="text-xs text-expense p-1.5"><i class="fa-solid fa-trash"></i></button>
-      `;
-          container.appendChild(card);
-        });
-      }
-
-      window.deleteAccount = async function (id) {
-        if (confirm("Eliminare il conto?")) {
-          await remove(ref(db, `accounts/${id}`));
-        }
-      };
-
-      function renderDebtsList() {
-        const container = document.getElementById("debts-list");
-        container.innerHTML = "";
-        const userDebts = state.debts.filter(
-          (d) => d.user === state.currentUser,
-        );
-
-        userDebts.forEach((d) => {
-          const card = document.createElement("div");
-          card.className =
-            "p-4 bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-2";
-          card.innerHTML = `
-        <div class="flex justify-between items-center">
-          <h4 class="font-bold text-base">${d.title}</h4>
-          <span class="text-sm font-extrabold">${d.current.toFixed(2)} / ${d.target.toFixed(2)} €</span>
-        </div>
-      `;
-          container.appendChild(card);
-        });
-      }
-
-      function renderUsersManagerList() {
-        const container = document.getElementById("users-manager-list");
-        container.innerHTML = "";
-        state.users.forEach((u) => {
-          const div = document.createElement("div");
-          div.className =
-            "flex items-center justify-between p-2.5 bg-gray-50 dark:bg-slate-700/50 rounded-xl";
-          div.innerHTML = `<span class="text-sm font-semibold">${u}</span>
-      <button onclick="deleteUser('${u}')" class="text-xs text-expense font-bold p-1"><i class="fa-solid fa-trash"></i></button>`;
-          container.appendChild(div);
-        });
-      }
-
-      window.deleteUser = async function (name) {
-        if (confirm(`Eliminare l'utente ${name}?`)) {
-          await remove(ref(db, `users/${name}`));
-        }
-      };
-
-      function renderTransactionsList() {
-        const container = document.getElementById("transactions-list");
-        container.innerHTML = "";
-        const userTx = state.transactions.filter(
-          (t) => t.user === state.currentUser,
-        );
-
-        userTx.forEach((t) => {
-          const div = document.createElement("div");
-          div.className =
-            "p-3 bg-white dark:bg-slate-800 rounded-xl flex justify-between items-center shadow-sm";
-          div.innerHTML = `
-        <div>
-          <p class="font-bold text-sm">${t.category} - ${t.party || "Generico"}</p>
-          <p class="text-xs text-gray-400">${t.date}</p>
-        </div>
-        <span class="font-bold ${t.type === "income" ? "text-income" : "text-expense"}">${t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)} €</span>
-      `;
-          container.appendChild(div);
-        });
       }
 
       function setupNavigation() {
@@ -1021,10 +1270,16 @@
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className =
-              "p-2 rounded-xl text-xs font-semibold border border-gray-200";
+              "p-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700";
             btn.innerHTML = `${c.emoji} ${c.name}`;
             btn.addEventListener("click", () => {
               document.getElementById("tx-category").value = c.name;
+              catGrid
+                .querySelectorAll("button")
+                .forEach((b) =>
+                  b.classList.remove("bg-primary/20", "border-primary"),
+                );
+              btn.classList.add("bg-primary/20", "border-primary");
             });
             if (idx === 0) btn.click();
             catGrid.appendChild(btn);
