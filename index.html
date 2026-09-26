@@ -524,15 +524,16 @@
         onValue,
       } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+      // Configurazione con l'URL del tuo Realtime Database
       const firebaseConfig = {
         apiKey: "AIzaSyD_tWdvjxOCFfbPADpGGzSfJ6MRz4O3rzM",
         authDomain: "gestione-spese-84.firebaseapp.com",
+        databaseURL:
+          "https://gestione-spese-84-default-rtdb.europe-west1.firebasedatabase.app", // <-- FONDAMENTALE PER LA SINCRONIZZAZIONE
         projectId: "gestione-spese-84",
         storageBucket: "gestione-spese-84.firebasestorage.app",
         messagingSenderId: "375465380274",
         appId: "1:375465380274:web:e77fe88204c8a4fbe87cab",
-        // Se necessario, inserisci l'URL del tuo database (lo trovi in alto nella console)
-        databaseURL: "https://gestione-spese-84-default-rtdb.firebaseio.com",
       };
 
       const app = initializeApp(firebaseConfig);
@@ -554,6 +555,20 @@
         setupNavigation();
         setupForms();
         listenAllRealtimeDatabaseNodes();
+
+        // Evento selettore utente
+        document
+          .getElementById("user-selector")
+          .addEventListener("change", (e) => {
+            state.currentUser = e.target.value;
+            document.getElementById("drawer-current-user").textContent =
+              state.currentUser;
+            updateChartAndCard();
+            renderCategoriesList();
+            renderAccountsList();
+            renderDebtsList();
+            renderTransactionsList();
+          });
       });
 
       window.closeCustomModal = function (id) {
@@ -583,7 +598,7 @@
         });
       }
 
-      // LISTENERS REAL-TIME PER REALTIME DATABASE
+      // LISTENERS IN TEMPO REALE
       function listenAllRealtimeDatabaseNodes() {
         // Utenti
         onValue(ref(db, "users"), (snapshot) => {
@@ -700,7 +715,7 @@
       }
 
       function setupForms() {
-        // 1. SALVA NUOVO UTENTE
+        // 1. CREA UTENTE
         document
           .getElementById("add-user-btn")
           .addEventListener("click", async () => {
@@ -710,20 +725,20 @@
               await set(ref(db, `users/${name}`), { name });
               input.value = "";
             } else {
-              alert("Inserisci un nome utente valido!");
+              alert("Inserisci un nome utente!");
             }
           });
 
-        // 2. SALVA NUOVO CONTO / CARTA
+        // 2. CREA CONTO / CARTA
         document
           .getElementById("add-account-btn")
           .addEventListener("click", async () => {
+            if (!state.currentUser)
+              return alert("Crea prima un profilo utente nelle Impostazioni!");
             const name = prompt(
-              "Inserisci il nome del nuovo conto o carta (es. Revolut, Intesa, Contanti):",
+              "Nome del nuovo conto/carta (es. Revolut, Contanti):",
             );
             if (name && name.trim() !== "") {
-              if (!state.currentUser)
-                return alert("Seleziona prima un utente!");
               const id = "acc_" + Date.now();
               await set(ref(db, `accounts/${id}`), {
                 id,
@@ -733,20 +748,18 @@
             }
           });
 
-        // 3. SALVA NUOVO DEBITO / CREDITO
+        // 3. CREA DEBITO / CREDITO
         document
           .getElementById("add-debt-btn")
           .addEventListener("click", async () => {
-            const title = prompt(
-              "Descrizione del debito/credito (es. Prestito Luca):",
-            );
+            if (!state.currentUser)
+              return alert("Crea prima un profilo utente nelle Impostazioni!");
+            const title = prompt("Descrizione (es. Prestito Marco):");
             if (!title || title.trim() === "") return;
 
             const targetStr = prompt("Importo totale (€):");
             const target = parseFloat(targetStr);
             if (isNaN(target)) return alert("Importo non valido!");
-
-            if (!state.currentUser) return alert("Seleziona prima un utente!");
 
             const id = "debt_" + Date.now();
             await set(ref(db, `debts/${id}`), {
@@ -758,11 +771,12 @@
             });
           });
 
-        // 4. APERTURA MODALE CATEGORIA
+        // 4. CREA CATEGORIA
         document
           .getElementById("add-category-btn")
           .addEventListener("click", () => {
-            if (!state.currentUser) return alert("Seleziona prima un utente!");
+            if (!state.currentUser)
+              return alert("Crea prima un profilo utente nelle Impostazioni!");
             document.getElementById("cat-edit-id").value = "";
             document.getElementById("cat-name-input").value = "";
             document.getElementById("cat-emoji-input").value = "📦";
@@ -771,7 +785,6 @@
               .classList.remove("hidden");
           });
 
-        // 5. SALVA CATEGORIA
         document
           .getElementById("save-cat-btn")
           .addEventListener("click", async () => {
@@ -798,11 +811,14 @@
             closeCustomModal("modal-category-form");
           });
 
-        // 6. SALVA TRANSAZIONE
+        // 5. SALVA TRANSAZIONE
         document
           .getElementById("transaction-form")
           .addEventListener("submit", async (e) => {
             e.preventDefault();
+            if (!state.currentUser)
+              return alert("Seleziona prima un profilo utente!");
+
             const id = "tx_" + Date.now();
             const newTx = {
               id,
@@ -984,6 +1000,9 @@
       }
 
       function openModal(type) {
+        if (!state.currentUser)
+          return alert("Crea prima un profilo utente nelle Impostazioni!");
+
         document.getElementById("tx-type").value = type;
         document.getElementById("modal-title").textContent =
           type === "income" ? "Nuova Entrata" : "Nuova Uscita";
@@ -994,29 +1013,41 @@
           (c) => c.user === state.currentUser && c.type === type,
         );
 
-        userCats.forEach((c, idx) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className =
-            "p-2 rounded-xl text-xs font-semibold border border-gray-200";
-          btn.innerHTML = `${c.emoji} ${c.name}`;
-          btn.addEventListener("click", () => {
-            document.getElementById("tx-category").value = c.name;
+        if (userCats.length === 0) {
+          catGrid.innerHTML =
+            '<p class="text-xs text-gray-400 col-span-3 text-center py-2">Nessuna categoria trovata. Creala prima nella sezione Categorie.</p>';
+        } else {
+          userCats.forEach((c, idx) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className =
+              "p-2 rounded-xl text-xs font-semibold border border-gray-200";
+            btn.innerHTML = `${c.emoji} ${c.name}`;
+            btn.addEventListener("click", () => {
+              document.getElementById("tx-category").value = c.name;
+            });
+            if (idx === 0) btn.click();
+            catGrid.appendChild(btn);
           });
-          if (idx === 0) btn.click();
-          catGrid.appendChild(btn);
-        });
+        }
 
         const accSelect = document.getElementById("tx-account");
         accSelect.innerHTML = "";
-        state.accounts
-          .filter((a) => a.user === state.currentUser)
-          .forEach((a) => {
+        const userAccs = state.accounts.filter(
+          (a) => a.user === state.currentUser,
+        );
+        if (userAccs.length === 0) {
+          const opt = document.createElement("option");
+          opt.textContent = "Nessun conto disponibile";
+          accSelect.appendChild(opt);
+        } else {
+          userAccs.forEach((a) => {
             const opt = document.createElement("option");
             opt.value = a.name;
             opt.textContent = a.name;
             accSelect.appendChild(opt);
           });
+        }
 
         document.getElementById("transaction-modal").classList.remove("hidden");
       }
