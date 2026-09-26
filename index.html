@@ -700,7 +700,7 @@
       }
 
       function setupForms() {
-        // Salva Nuovo Utente
+        // 1. SALVA NUOVO UTENTE
         document
           .getElementById("add-user-btn")
           .addEventListener("click", async () => {
@@ -709,10 +709,96 @@
             if (name) {
               await set(ref(db, `users/${name}`), { name });
               input.value = "";
+            } else {
+              alert("Inserisci un nome utente valido!");
             }
           });
 
-        // Salva Transazione
+        // 2. SALVA NUOVO CONTO / CARTA
+        document
+          .getElementById("add-account-btn")
+          .addEventListener("click", async () => {
+            const name = prompt(
+              "Inserisci il nome del nuovo conto o carta (es. Revolut, Intesa, Contanti):",
+            );
+            if (name && name.trim() !== "") {
+              if (!state.currentUser)
+                return alert("Seleziona prima un utente!");
+              const id = "acc_" + Date.now();
+              await set(ref(db, `accounts/${id}`), {
+                id,
+                user: state.currentUser,
+                name: name.trim(),
+              });
+            }
+          });
+
+        // 3. SALVA NUOVO DEBITO / CREDITO
+        document
+          .getElementById("add-debt-btn")
+          .addEventListener("click", async () => {
+            const title = prompt(
+              "Descrizione del debito/credito (es. Prestito Luca):",
+            );
+            if (!title || title.trim() === "") return;
+
+            const targetStr = prompt("Importo totale (€):");
+            const target = parseFloat(targetStr);
+            if (isNaN(target)) return alert("Importo non valido!");
+
+            if (!state.currentUser) return alert("Seleziona prima un utente!");
+
+            const id = "debt_" + Date.now();
+            await set(ref(db, `debts/${id}`), {
+              id,
+              user: state.currentUser,
+              title: title.trim(),
+              current: 0,
+              target: target,
+            });
+          });
+
+        // 4. APERTURA MODALE CATEGORIA
+        document
+          .getElementById("add-category-btn")
+          .addEventListener("click", () => {
+            if (!state.currentUser) return alert("Seleziona prima un utente!");
+            document.getElementById("cat-edit-id").value = "";
+            document.getElementById("cat-name-input").value = "";
+            document.getElementById("cat-emoji-input").value = "📦";
+            document
+              .getElementById("modal-category-form")
+              .classList.remove("hidden");
+          });
+
+        // 5. SALVA CATEGORIA
+        document
+          .getElementById("save-cat-btn")
+          .addEventListener("click", async () => {
+            const editId =
+              document.getElementById("cat-edit-id").value ||
+              "cat_" + Date.now();
+            const name = document.getElementById("cat-name-input").value.trim();
+            const emoji =
+              document.getElementById("cat-emoji-input").value.trim() || "📦";
+            const color = document.getElementById("cat-color-input").value;
+            const type = document.getElementById("cat-type-input").value;
+
+            if (!name) return alert("Inserisci un nome per la categoria!");
+
+            await set(ref(db, `categories/${editId}`), {
+              id: editId,
+              user: state.currentUser,
+              name,
+              emoji,
+              color,
+              type,
+            });
+
+            closeCustomModal("modal-category-form");
+          });
+
+        // 6. SALVA TRANSAZIONE
         document
           .getElementById("transaction-form")
           .addEventListener("submit", async (e) => {
@@ -732,33 +818,6 @@
             };
             await set(ref(db, `transactions/${id}`), newTx);
             closeModal();
-          });
-
-        // Salva Categoria
-        document
-          .getElementById("save-cat-btn")
-          .addEventListener("click", async () => {
-            const editId =
-              document.getElementById("cat-edit-id").value ||
-              "cat_" + Date.now();
-            const name = document.getElementById("cat-name-input").value.trim();
-            const emoji =
-              document.getElementById("cat-emoji-input").value.trim() || "📦";
-            const color = document.getElementById("cat-color-input").value;
-            const type = document.getElementById("cat-type-input").value;
-
-            if (!name) return alert("Inserisci un nome!");
-
-            await set(ref(db, `categories/${editId}`), {
-              id: editId,
-              user: state.currentUser,
-              name,
-              emoji,
-              color,
-              type,
-            });
-
-            closeCustomModal("modal-category-form");
           });
       }
 
