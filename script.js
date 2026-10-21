@@ -1,4 +1,26 @@
-// ============ COSTANTI ============
+// ============================================
+// CONFIGURAZIONE FIREBASE
+// ️ INSERISCI QUI LE TUE CHIAVI (non condividerle!)
+// ============================================
+const firebaseConfig = {
+  apiKey: "AIzaSyD_tWdvjxOCFfbPADpGGzSfJ6MRz4O3rzM",
+  authDomain: "gestione-spese-84.firebaseapp.com",
+  databaseURL:
+    "https://gestione-spese-84-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gestione-spese-84",
+  storageBucket: "gestione-spese-84.firebasestorage.app",
+  messagingSenderId: "375465380274",
+  appId: "1:375465380274:web:e77fe88204c8a4fbe87cab",
+};
+
+// Inizializza Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// ============================================
+// COSTANTI & DATI DEFAULT
+// ============================================
 const DEFAULT_CATEGORIES = [
   {
     id: "cat1",
@@ -21,7 +43,7 @@ const DEFAULT_CATEGORIES = [
     color: "#f59e0b",
     type: "expense",
   },
-  { id: "cat4", name: "Svago", icon: "🎬", color: "#a855f7", type: "expense" },
+  { id: "cat4", name: "Svago", icon: "", color: "#a855f7", type: "expense" },
   {
     id: "cat5",
     name: "Stipendio",
@@ -41,7 +63,6 @@ const DEFAULT_ACCOUNTS = [
   },
   { id: "acc2", name: "Carta Visa", icon: "💳", color: "#0ea5e9", balance: 0 },
 ];
-
 const MONTHS_IT = [
   "Gennaio",
   "Febbraio",
@@ -57,67 +78,51 @@ const MONTHS_IT = [
   "Dicembre",
 ];
 
-// ============ STATO ============
+// ============================================
+// STATO APP
+// ============================================
 let state = {
-  users: JSON.parse(localStorage.getItem("abt_users")) || [],
-  currentUser: localStorage.getItem("abt_currentUser") || null,
+  currentUser: null, // UID Firebase
+  currentEmail: null,
   currentSection: "dashboard",
   currentType: "income",
   currentCatType: "expense",
   currentDebtType: "debt",
   currentViewId: null,
-  pendingUserSwitch: null,
+  data: null, // Dati utente caricati da Firebase
+  dataRef: null, // Riferimento al nodo DB
+  listeners: [], // Listener attivi
 };
 
-// ============ UTILS ============
+// ============================================
+// UTILS
+// ============================================
 const $ = (id) => document.getElementById(id);
-const save = () =>
-  localStorage.setItem("abt_users", JSON.stringify(state.users));
 const genId = () =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const formatMoney = (n) => "€ " + n.toFixed(2).replace(".", ",");
+const formatMoney = (n) => "€ " + (n || 0).toFixed(2).replace(".", ",");
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("it-IT", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
-const hashPwd = (p) => btoa(unescape(encodeURIComponent(p)));
-
-function getUserData(userId) {
-  const data = JSON.parse(localStorage.getItem(`abt_data_${userId}`));
-  if (data) return data;
-  return {
-    movements: [],
-    categories: [...DEFAULT_CATEGORIES],
-    accounts: [...DEFAULT_ACCOUNTS],
-    debts: [],
-  };
-}
-function saveUserData(userId, data) {
-  localStorage.setItem(`abt_data_${userId}`, JSON.stringify(data));
-}
-function getCurrentData() {
-  return state.currentUser ? getUserData(state.currentUser) : null;
-}
-function saveCurrentData(data) {
-  if (state.currentUser) saveUserData(state.currentUser, data);
-}
-const getCategory = (id, data) =>
-  data.categories.find((c) => c.id === id) || {
+const getCategory = (id) =>
+  state.data?.categories.find((c) => c.id === id) || {
     name: "—",
     icon: "❓",
     color: "#94a3b8",
   };
-const getAccount = (id, data) =>
-  data.accounts.find((a) => a.id === id) || {
+const getAccount = (id) =>
+  state.data?.accounts.find((a) => a.id === id) || {
     name: "—",
     icon: "—",
     color: "#94a3b8",
   };
-const getUser = (id) => state.users.find((u) => u.id === id);
 
-// ============ TEMA ============
+// ============================================
+// TEMA
+// ============================================
 function initTheme() {
   const saved = localStorage.getItem("abt_theme") || "light";
   applyTheme(saved);
@@ -140,21 +145,21 @@ $("themeToggle").addEventListener("change", (e) =>
   applyTheme(e.target.checked ? "dark" : "light"),
 );
 
-// ============ NAVIGAZIONE ============
+// ============================================
+// NAVIGAZIONE
+// ============================================
 function navigateTo(section) {
   state.currentSection = section;
   document
     .querySelectorAll(".section")
     .forEach((s) => s.classList.remove("active"));
   $("section-" + section).classList.add("active");
-
   document
     .querySelectorAll(".nav-link")
     .forEach((n) => n.classList.remove("active"));
   document
     .querySelectorAll(`.nav-link[data-section="${section}"]`)
     .forEach((n) => n.classList.add("active"));
-
   const titles = {
     dashboard: "Dashboard",
     movements: "Movimenti",
@@ -164,10 +169,7 @@ function navigateTo(section) {
     settings: "Impostazioni",
   };
   $("pageTitle").textContent = titles[section];
-
   refreshCurrent();
-
-  // Chiudi sidebar E overlay su mobile
   sidebar.classList.remove("open");
   sidebarOverlay.classList.remove("active");
 }
@@ -182,352 +184,287 @@ document
     btn.addEventListener("click", () => navigateTo(btn.dataset.goto)),
   );
 
-// Gestione apertura/chiusura sidebar e overlay
 const sidebar = document.querySelector(".sidebar");
 const sidebarOverlay = $("sidebarOverlay");
-
 $("menuToggle").addEventListener("click", () => {
   sidebar.classList.toggle("open");
   sidebarOverlay.classList.toggle("active");
 });
-
-// Chiudi sidebar cliccando sull'overlay
 sidebarOverlay.addEventListener("click", () => {
   sidebar.classList.remove("open");
   sidebarOverlay.classList.remove("active");
 });
 
-// ============ UTENTI ============
-function updateUserDisplay() {
-  const user = getUser(state.currentUser);
+// ============================================
+// FIREBASE AUTH
+// ============================================
+let authMode = "login"; // 'login' o 'register'
+
+$("authSwitchBtn").addEventListener("click", () => {
+  authMode = authMode === "login" ? "register" : "login";
+  if (authMode === "login") {
+    $("authTitle").textContent = "Accedi";
+    $("authSubmitBtn").textContent = "Accedi";
+    $("authSwitchText").textContent = "Non hai un account?";
+    $("authSwitchBtn").textContent = "Registrati";
+    $("authNameGroup").style.display = "none";
+  } else {
+    $("authTitle").textContent = "Registrati";
+    $("authSubmitBtn").textContent = "Crea account";
+    $("authSwitchText").textContent = "Hai già un account?";
+    $("authSwitchBtn").textContent = "Accedi";
+    $("authNameGroup").style.display = "block";
+  }
+  $("authError").textContent = "";
+});
+
+$("authForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
+  const name = $("authName").value.trim();
+  $("authError").textContent = "";
+
+  try {
+    if (authMode === "login") {
+      await auth.signInWithEmailAndPassword(email, password);
+    } else {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      // Aggiorna il displayName
+      await cred.user.updateProfile({
+        displayName: name || email.split("@")[0],
+      });
+      // Inizializza i dati default per il nuovo utente
+      await db.ref("users/" + cred.user.uid).set({
+        movements: {},
+        categories: arrayToObject(DEFAULT_CATEGORIES),
+        accounts: arrayToObject(DEFAULT_ACCOUNTS),
+        debts: {},
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+      });
+    }
+  } catch (err) {
+    $("authError").textContent = translateAuthError(err.code);
+  }
+});
+
+function translateAuthError(code) {
+  const errors = {
+    "auth/user-not-found": "Utente non trovato",
+    "auth/wrong-password": "Password errata",
+    "auth/invalid-email": "Email non valida",
+    "auth/email-already-in-use": "Email già registrata",
+    "auth/weak-password": "Password troppo debole (min. 6 caratteri)",
+    "auth/invalid-credential": "Credenziali non valide",
+    "auth/too-many-requests": "Troppi tentativi. Riprova più tardi",
+  };
+  return errors[code] || "Errore: " + code;
+}
+
+$("logoutBtn").addEventListener("click", async () => {
+  if (confirm("Vuoi davvero uscire dall'account?")) {
+    await auth.signOut();
+  }
+});
+
+// Listener stato auth
+auth.onAuthStateChanged((user) => {
   if (user) {
-    $("userAvatar").textContent = user.name.charAt(0).toUpperCase();
-    $("userAvatar").style.background = user.color;
-    $("userName").textContent = user.name;
+    state.currentUser = user.uid;
+    state.currentEmail = user.email;
+    $("authScreen").classList.add("hidden");
+    $("settingsEmail").textContent = user.email;
+    subscribeUserData(user.uid);
   } else {
-    $("userAvatar").textContent = "?";
-    $("userAvatar").style.background = "#94a3b8";
-    $("userName").textContent = "Nessun utente";
+    state.currentUser = null;
+    state.data = null;
+    detachListeners();
+    $("authScreen").classList.remove("hidden");
   }
-}
-
-$("userBtn").addEventListener("click", (e) => {
-  e.stopPropagation();
-  $("userDropdown").classList.toggle("active");
-  renderUserDropdown();
 });
 
-function renderUserDropdown() {
-  const dropdown = $("userDropdown");
-  if (state.users.length === 0) {
-    dropdown.innerHTML =
-      '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">Nessun utente</div>';
-    return;
-  }
-  dropdown.innerHTML = state.users
-    .map(
-      (u) => `
-        <div class="user-dropdown-item ${u.id === state.currentUser ? "active" : ""}" onclick="requestSwitchUser('${u.id}')">
-            <div class="user-avatar" style="background:${u.color};width:28px;height:28px;font-size:12px">${u.name.charAt(0).toUpperCase()}</div>
-            <span style="font-weight:600;font-size:14px">${u.name}</span>
-        </div>
-    `,
-    )
-    .join("");
-}
+// ============================================
+// SICUREZZA: MODALITÀ OFFLINE SOLO PER LOCALHOST
+// ============================================
+function enableOfflineMode() {
+  // Nasconde la schermata di login
+  $("authScreen").classList.add("hidden");
 
-window.requestSwitchUser = (userId) => {
-  $("userDropdown").classList.remove("active");
-  const user = getUser(userId);
-  if (!user) return;
-  if (user.password) {
-    state.pendingUserSwitch = userId;
-    $("loginUserName").textContent = user.name;
-    $("loginPassword").value = "";
-    $("loginError").textContent = "";
-    $("loginModal").classList.add("active");
+  // Imposta un utente fittizio
+  state.currentUser = "offline_user";
+  state.currentEmail = "demo@offline.com";
+  if ($("settingsEmail"))
+    $("settingsEmail").textContent = "demo@offline.com (Locale)";
+
+  // Carica i dati dal localStorage (se esistono) o usa i default
+  const savedOfflineData = localStorage.getItem("abt_offline_data");
+  if (savedOfflineData) {
+    try {
+      state.data = JSON.parse(savedOfflineData);
+    } catch (e) {
+      console.warn("Dati offline corrotti, uso default");
+      state.data = {
+        movements: [],
+        categories: DEFAULT_CATEGORIES,
+        accounts: DEFAULT_ACCOUNTS,
+        debts: [],
+      };
+    }
   } else {
-    switchUser(userId);
-  }
-};
-
-window.switchUser = (userId) => {
-  state.currentUser = userId;
-  localStorage.setItem("abt_currentUser", userId);
-  updateUserDisplay();
-  renderUsers();
-  refreshCurrent();
-};
-
-window.deleteUser = (userId) => {
-  if (!confirm("Eliminare questo utente e tutti i suoi dati?")) return;
-  state.users = state.users.filter((u) => u.id !== userId);
-  localStorage.removeItem(`abt_data_${userId}`);
-  save();
-  if (state.currentUser === userId) {
-    state.currentUser = state.users.length > 0 ? state.users[0].id : null;
-    localStorage.setItem("abt_currentUser", state.currentUser || "");
-  }
-  updateUserDisplay();
-  renderUsers();
-  refreshCurrent();
-  updatePasswordStatus();
-};
-
-document.addEventListener("click", () =>
-  $("userDropdown").classList.remove("active"),
-);
-
-$("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const user = getUser(state.pendingUserSwitch);
-  if (!user) return;
-  const pwd = hashPwd($("loginPassword").value);
-  if (pwd === user.password) {
-    $("loginModal").classList.remove("active");
-    switchUser(state.pendingUserSwitch);
-    state.pendingUserSwitch = null;
-  } else {
-    $("loginError").textContent = "Password errata";
-  }
-});
-$("cancelLoginBtn").addEventListener("click", () => {
-  $("loginModal").classList.remove("active");
-  state.pendingUserSwitch = null;
-});
-
-function renderUsers() {
-  const list = $("usersList");
-  if (state.users.length === 0) {
-    list.innerHTML =
-      '<div class="empty-state"><i class="fas fa-users"></i><p>Nessun utente creato. Crea il tuo primo profilo!</p></div>';
-    return;
-  }
-  list.innerHTML = state.users
-    .map((u) => {
-      const data = getUserData(u.id);
-      const mvCount = data.movements.length;
-      const isActive = u.id === state.currentUser;
-      const hasPwd = !!u.password;
-      return `
-            <div class="user-item ${isActive ? "active" : ""}">
-                <div class="user-avatar" style="background:${u.color};width:48px;height:48px;font-size:18px">${u.name.charAt(0).toUpperCase()}</div>
-                <div class="user-item-info">
-                    <div class="user-item-name">
-                        ${u.name}
-                        ${isActive ? '<span class="badge-active">Attivo</span>' : ""}
-                        ${hasPwd ? '<i class="fas fa-lock icon-lock" title="Protetto da password"></i>' : ""}
-                    </div>
-                    <div class="user-item-stats">${mvCount} moviment${mvCount === 1 ? "o" : "i"} • ${data.debts.length} debit${data.debts.length === 1 ? "o" : "i"}/credit${data.debts.length === 1 ? "o" : "i"}</div>
-                </div>
-                <div class="user-item-actions">
-                    ${!isActive ? `<button class="btn-use" onclick="requestSwitchUser('${u.id}')"><i class="fas fa-sign-in-alt"></i> Usa</button>` : '<button class="btn-use active-user"><i class="fas fa-check"></i> In uso</button>'}
-                    <button class="btn-icon edit" onclick="editUser('${u.id}')" title="Modifica"><i class="fas fa-pen"></i></button>
-                    <button class="btn-icon delete" onclick="deleteUser('${u.id}')" title="Elimina"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
-    })
-    .join("");
-}
-
-window.editUser = (userId) => {
-  const user = state.users.find((u) => u.id === userId);
-  if (!user) return;
-  $("userModalTitle").textContent = "Modifica Utente";
-  $("userId").value = user.id;
-  $("userNameInput").value = user.name;
-  $("userColor").value = user.color;
-  $("userPassword").value = "";
-  $("userPassword").placeholder =
-    "Lascia vuoto per mantenere la password attuale";
-  $("userModal").classList.add("active");
-};
-
-$("addUserBtn").addEventListener("click", () => {
-  $("userModalTitle").textContent = "Nuovo Utente";
-  $("userForm").reset();
-  $("userId").value = "";
-  $("userColor").value = "#4f46e5";
-  $("userPassword").placeholder = "Lascia vuoto per nessuna";
-  $("userModal").classList.add("active");
-});
-
-$("userForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const id = $("userId").value || genId();
-  const name = $("userNameInput").value.trim();
-  const color = $("userColor").value;
-  const pwdRaw = $("userPassword").value;
-
-  const existing = state.users.findIndex((u) => u.id === id);
-  if (existing !== -1) {
-    const updated = { ...state.users[existing], name, color };
-    if (pwdRaw) updated.password = hashPwd(pwdRaw);
-    state.users[existing] = updated;
-  } else {
-    const newUser = { id, name, color };
-    if (pwdRaw) newUser.password = hashPwd(pwdRaw);
-    state.users.push(newUser);
-    saveUserData(id, {
+    state.data = {
       movements: [],
       categories: [...DEFAULT_CATEGORIES],
       accounts: [...DEFAULT_ACCOUNTS],
       debts: [],
-    });
+    };
   }
-  save();
-  if (!state.currentUser) {
-    state.currentUser = id;
-    localStorage.setItem("abt_currentUser", id);
-  }
-  updateUserDisplay();
-  $("userModal").classList.remove("active");
-  renderUsers();
-  refreshCurrent();
-  updatePasswordStatus();
-});
 
-// ============ PASSWORD ============
-function updatePasswordStatus() {
-  const user = getUser(state.currentUser);
-  if (!user) {
-    $("passwordStatus").textContent = "Nessun utente selezionato";
-    return;
-  }
-  $("passwordStatus").textContent = user.password
-    ? "🔒 Password attiva"
-    : "Nessuna password impostata";
+  // Aggiorna la UI
+  refreshCurrent();
+  console.log("✅ Modalità Offline attivata (Test Locale)");
 }
 
-$("managePasswordBtn").addEventListener("click", () => {
-  if (!state.currentUser) {
-    alert("Seleziona prima un utente");
-    return;
-  }
-  const user = getUser(state.currentUser);
-  $("pwdModalTitle").textContent = user.password
-    ? "Cambia Password"
-    : "Imposta Password";
-  $("pwdCurrent").value = "";
-  $("pwdNew").value = "";
-  $("pwdConfirm").value = "";
-  $("pwdCurrent").parentElement.style.display = user.password
-    ? "block"
-    : "none";
-  $("passwordModal").classList.add("active");
-});
+// Controllo hostname: funziona con localhost, 127.0.0.1, file://, e IP di rete locale
+const hostname = window.location.hostname;
+const isLocal =
+  hostname === "localhost" ||
+  hostname === "127.0.0.1" ||
+  hostname === "" || // file://
+  hostname.startsWith("192.168.") ||
+  hostname.startsWith("10.") ||
+  hostname.endsWith(".local");
 
-$("passwordForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const user = getUser(state.currentUser);
-  if (!user) return;
-  const currentRaw = $("pwdCurrent").value;
-  const newRaw = $("pwdNew").value;
-  const confirmRaw = $("pwdConfirm").value;
+if (isLocal) {
+  // Aggiunge la classe al body per mostrare il pulsante via CSS
+  document.body.classList.add("is-local");
+  console.log("🔧 Ambiente locale rilevato:", hostname || "(file://)");
 
-  if (user.password && hashPwd(currentRaw) !== user.password) {
-    alert("Password attuale errata");
-    return;
-  }
-  if (newRaw && newRaw !== confirmRaw) {
-    alert("Le password non corrispondono");
-    return;
-  }
-
-  if (newRaw) user.password = hashPwd(newRaw);
-  else delete user.password;
-
-  save();
-  $("passwordModal").classList.remove("active");
-  updatePasswordStatus();
-  renderUsers();
-});
-$("cancelPwdBtn").addEventListener("click", () =>
-  $("passwordModal").classList.remove("active"),
-);
-
-// ============ IMPORT/EXPORT/CLEAR ============
-$("exportBtn").addEventListener("click", () => {
-  const data = {
-    users: state.users,
-    theme: localStorage.getItem("abt_theme") || "light",
-    userData: {},
-  };
-  state.users.forEach((u) => {
-    data.userData[u.id] = getUserData(u.id);
-  });
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `abtracker_backup_${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-$("importBtn").addEventListener("click", () => $("importFile").click());
-$("importFile").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (!confirm("Questo sostituirà tutti i dati attuali. Continuare?"))
-        return;
-      localStorage.clear();
-      state.users = data.users || [];
-      save();
-      if (data.userData) {
-        Object.keys(data.userData).forEach((uid) =>
-          saveUserData(uid, data.userData[uid]),
-        );
-      }
-      state.currentUser = state.users.length > 0 ? state.users[0].id : null;
-      localStorage.setItem("abt_currentUser", state.currentUser || "");
-      if (data.theme) applyTheme(data.theme);
-      updateUserDisplay();
-      renderUsers();
-      refreshCurrent();
-      updatePasswordStatus();
-      alert("Dati importati con successo!");
-    } catch (err) {
-      alert("File non valido");
+  // Assegna il click handler solo quando il DOM è pronto
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = $("offlineModeBtn");
+    if (btn) {
+      btn.addEventListener("click", enableOfflineMode);
+      console.log("🔘 Pulsante offline collegato");
+    } else {
+      console.warn("⚠️ Pulsante offline non trovato nell'HTML");
     }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-});
+  });
+} else {
+  console.log("🌐 Ambiente di produzione — modalità offline disabilitata");
+}
 
-$("clearAllBtn").addEventListener("click", () => {
-  if (
-    !confirm(
-      "⚠️ ATTENZIONE: Questo eliminerà TUTTI gli utenti e i dati. Continuare?",
-    )
-  )
+// ============================================
+// FIREBASE DATA (Realtime Database)
+// ============================================
+function arrayToObject(arr) {
+  const obj = {};
+  arr.forEach((item) => {
+    obj[item.id] = item;
+  });
+  return obj;
+}
+function objectToArray(obj) {
+  if (!obj) return [];
+  return Object.keys(obj).map((key) => ({ id: key, ...obj[key] }));
+}
+
+function subscribeUserData(uid) {
+  detachListeners();
+  state.dataRef = db.ref("users/" + uid);
+
+  const listener = state.dataRef.on("value", (snapshot) => {
+    const raw = snapshot.val();
+    if (!raw) {
+      // Primo accesso: inizializza con dati default
+      state.dataRef.set({
+        movements: {},
+        categories: arrayToObject(DEFAULT_CATEGORIES),
+        accounts: arrayToObject(DEFAULT_ACCOUNTS),
+        debts: {},
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+      });
+      return;
+    }
+    state.data = {
+      movements: objectToArray(raw.movements),
+      categories: objectToArray(raw.categories),
+      accounts: objectToArray(raw.accounts),
+      debts: objectToArray(raw.debts),
+    };
+    refreshCurrent();
+  });
+  state.listeners.push({
+    ref: state.dataRef,
+    event: "value",
+    callback: listener,
+  });
+}
+
+function detachListeners() {
+  state.listeners.forEach((l) => l.ref.off(l.event, l.callback));
+  state.listeners = [];
+}
+
+// Funzioni di salvataggio su Firebase
+async function saveMovements() {
+  if (state.currentUser === "offline_user") {
+    localStorage.setItem("abt_offline_data", JSON.stringify(state.data));
     return;
-  if (!confirm("Sei davvero sicuro? Questa azione è irreversibile.")) return;
-  localStorage.clear();
-  state.users = [];
-  state.currentUser = null;
-  updateUserDisplay();
-  renderUsers();
-  refreshCurrent();
-  updatePasswordStatus();
-});
+  }
+  if (!state.dataRef) return;
+  const obj = {};
+  state.data.movements.forEach((m) => {
+    obj[m.id] = m;
+  });
+  await state.dataRef.child("movements").set(obj);
+}
+async function saveCategories() {
+  if (state.currentUser === "offline_user") {
+    localStorage.setItem("abt_offline_data", JSON.stringify(state.data));
+    return;
+  }
+  if (!state.dataRef) return;
+  const obj = {};
+  state.data.categories.forEach((c) => {
+    obj[c.id] = c;
+  });
+  await state.dataRef.child("categories").set(obj);
+}
+async function saveAccounts() {
+  if (state.currentUser === "offline_user") {
+    localStorage.setItem("abt_offline_data", JSON.stringify(state.data));
+    return;
+  }
+  if (!state.dataRef) return;
+  const obj = {};
+  state.data.accounts.forEach((a) => {
+    obj[a.id] = a;
+  });
+  await state.dataRef.child("accounts").set(obj);
+}
+async function saveDebts() {
+  if (state.currentUser === "offline_user") {
+    localStorage.setItem("abt_offline_data", JSON.stringify(state.data));
+    return;
+  }
+  if (!state.dataRef) return;
+  const obj = {};
+  state.data.debts.forEach((d) => {
+    obj[d.id] = d;
+  });
+  await state.dataRef.child("debts").set(obj);
+}
 
-// ============ DASHBOARD (mese attuale) ============
+// ============================================
+// DASHBOARD (mese attuale)
+// ============================================
 function renderDashboard() {
-  const data = getCurrentData();
-  if (!data) {
+  if (!state.data) {
     $("dashIncome").textContent = "€ 0,00";
     $("dashExpense").textContent = "€ 0,00";
     $("dashMovementsList").innerHTML =
-      '<div class="empty-state"><i class="fas fa-user"></i><p>Vai in Impostazioni per creare il tuo primo profilo utente.</p></div>';
-    $("dashMonthBadge").textContent = "Nessun utente";
+      '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento dati...</p></div>';
+    $("dashMonthBadge").textContent = "—";
     return;
   }
 
@@ -536,7 +473,7 @@ function renderDashboard() {
   const curYear = now.getFullYear();
   $("dashMonthBadge").textContent = `${MONTHS_IT[curMonth]} ${curYear}`;
 
-  const monthMovements = data.movements.filter((m) => {
+  const monthMovements = state.data.movements.filter((m) => {
     const d = new Date(m.date);
     return d.getMonth() === curMonth && d.getFullYear() === curYear;
   });
@@ -556,15 +493,17 @@ function renderDashboard() {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
   list.innerHTML = recent.length
-    ? recent.map((m) => movementHTML(m, data)).join("")
+    ? recent.map((m) => movementHTML(m)).join("")
     : '<div class="empty-state"><i class="fas fa-receipt"></i><p>Nessun movimento questo mese</p></div>';
-  attachMovementListeners(list, data);
+  attachMovementListeners(list);
 }
 
-// ============ MOVIMENTI (tutti con filtri) ============
-function movementHTML(m, data) {
-  const cat = getCategory(m.categoryId, data);
-  const acc = getAccount(m.accountId, data);
+// ============================================
+// MOVIMENTI
+// ============================================
+function movementHTML(m) {
+  const cat = getCategory(m.categoryId);
+  const acc = getAccount(m.accountId);
   const sign = m.type === "income" ? "+" : "-";
   return `
         <div class="movement-item" data-id="${m.id}">
@@ -584,13 +523,13 @@ function movementHTML(m, data) {
     `;
 }
 
-function attachMovementListeners(container, data) {
+function attachMovementListeners(container) {
   container.querySelectorAll(".movement-item").forEach((el) => {
-    el.addEventListener("click", () => openViewModal(el.dataset.id, data));
+    el.addEventListener("click", () => openViewModal(el.dataset.id));
   });
 }
 
-function populateMonthFilter(data) {
+function populateMonthFilter() {
   const sel = $("filterMonth");
   const current = sel.value;
   sel.innerHTML =
@@ -599,11 +538,13 @@ function populateMonthFilter(data) {
   sel.value = current;
 }
 
-function populateYearFilter(data) {
+function populateYearFilter() {
   const sel = $("filterYear");
   const current = sel.value;
   const years = new Set([new Date().getFullYear()]);
-  data.movements.forEach((m) => years.add(new Date(m.date).getFullYear()));
+  state.data.movements.forEach((m) =>
+    years.add(new Date(m.date).getFullYear()),
+  );
   const sorted = [...years].sort((a, b) => b - a);
   sel.innerHTML =
     '<option value="all">Tutti gli anni</option>' +
@@ -612,25 +553,23 @@ function populateYearFilter(data) {
 }
 
 function renderMovements() {
-  const data = getCurrentData();
-  if (!data) {
+  if (!state.data) {
     $("movementsList").innerHTML =
-      '<div class="empty-state"><i class="fas fa-user"></i><p>Seleziona un utente</p></div>';
+      '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento...</p></div>';
     $("movIncome").textContent = "€ 0,00";
     $("movExpense").textContent = "€ 0,00";
     return;
   }
 
-  populateMonthFilter(data);
-  populateYearFilter(data);
+  populateMonthFilter();
+  populateYearFilter();
 
   const search = $("searchInput").value.toLowerCase();
   const typeFilter = $("filterType").value;
   const monthFilter = $("filterMonth").value;
   const yearFilter = $("filterYear").value;
 
-  let list = [...data.movements];
-
+  let list = [...state.data.movements];
   if (typeFilter !== "all") list = list.filter((m) => m.type === typeFilter);
   if (monthFilter !== "all")
     list = list.filter(
@@ -644,7 +583,7 @@ function renderMovements() {
     list = list.filter(
       (m) =>
         m.description.toLowerCase().includes(search) ||
-        getCategory(m.categoryId, data).name.toLowerCase().includes(search),
+        getCategory(m.categoryId).name.toLowerCase().includes(search),
     );
 
   list.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -660,9 +599,9 @@ function renderMovements() {
 
   const container = $("movementsList");
   container.innerHTML = list.length
-    ? list.map((m) => movementHTML(m, data)).join("")
+    ? list.map((m) => movementHTML(m)).join("")
     : '<div class="empty-state"><i class="fas fa-receipt"></i><p>Nessun movimento trovato</p></div>';
-  attachMovementListeners(container, data);
+  attachMovementListeners(container);
 }
 
 $("searchInput").addEventListener("input", renderMovements);
@@ -670,29 +609,28 @@ $("filterType").addEventListener("change", renderMovements);
 $("filterMonth").addEventListener("change", renderMovements);
 $("filterYear").addEventListener("change", renderMovements);
 
-// ============ CATEGORIE ============
+// ============================================
+// CATEGORIE
+// ============================================
 function renderCategories() {
-  const data = getCurrentData();
-  if (!data) {
+  if (!state.data) {
     $("incomeCategoriesGrid").innerHTML =
-      '<div class="empty-state"><i class="fas fa-user"></i><p>Seleziona un utente</p></div>';
+      '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento...</p></div>';
     $("expenseCategoriesGrid").innerHTML =
-      '<div class="empty-state"><i class="fas fa-user"></i><p>Seleziona un utente</p></div>';
+      '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento...</p></div>';
     return;
   }
   renderCategoryGrid(
     "incomeCategoriesGrid",
-    data.categories.filter((c) => c.type === "income"),
-    data,
+    state.data.categories.filter((c) => c.type === "income"),
   );
   renderCategoryGrid(
     "expenseCategoriesGrid",
-    data.categories.filter((c) => c.type === "expense"),
-    data,
+    state.data.categories.filter((c) => c.type === "expense"),
   );
 }
 
-function renderCategoryGrid(containerId, categories, data) {
+function renderCategoryGrid(containerId, categories) {
   const container = $(containerId);
   if (categories.length === 0) {
     container.innerHTML =
@@ -701,7 +639,9 @@ function renderCategoryGrid(containerId, categories, data) {
   }
   container.innerHTML = categories
     .map((c) => {
-      const count = data.movements.filter((m) => m.categoryId === c.id).length;
+      const count = state.data.movements.filter(
+        (m) => m.categoryId === c.id,
+      ).length;
       return `
             <div class="cat-card">
                 <div class="card-actions">
@@ -718,33 +658,37 @@ function renderCategoryGrid(containerId, categories, data) {
   container.querySelectorAll(".edit-cat").forEach((b) =>
     b.addEventListener("click", (e) => {
       e.stopPropagation();
-      openCategoryModal(b.dataset.id, data);
+      openCategoryModal(b.dataset.id);
     }),
   );
   container.querySelectorAll(".del-cat").forEach((b) =>
-    b.addEventListener("click", (e) => {
+    b.addEventListener("click", async (e) => {
       e.stopPropagation();
       if (confirm("Eliminare questa categoria?")) {
-        data.categories = data.categories.filter((c) => c.id !== b.dataset.id);
-        saveCurrentData(data);
-        renderCategories();
+        state.data.categories = state.data.categories.filter(
+          (c) => c.id !== b.dataset.id,
+        );
+        await saveCategories();
       }
     }),
   );
 }
 
-// ============ CONTI ============
+// ============================================
+// CONTI
+// ============================================
 function renderAccounts() {
-  const data = getCurrentData();
-  if (!data) {
+  if (!state.data) {
     $("accountsGrid").innerHTML =
-      '<div class="empty-state"><i class="fas fa-user"></i><p>Seleziona un utente</p></div>';
+      '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento...</p></div>';
     return;
   }
   const grid = $("accountsGrid");
-  grid.innerHTML = data.accounts
+  grid.innerHTML = state.data.accounts
     .map((a) => {
-      const count = data.movements.filter((m) => m.accountId === a.id).length;
+      const count = state.data.movements.filter(
+        (m) => m.accountId === a.id,
+      ).length;
       const iconHtml = a.logo
         ? `<img src="${a.logo}" alt="${a.name}" onerror="this.style.display='none';this.parentElement.innerHTML='${a.icon || ""}'">`
         : `<span>${a.icon || "💳"}</span>`;
@@ -764,34 +708,33 @@ function renderAccounts() {
   grid.querySelectorAll(".edit-acc").forEach((b) =>
     b.addEventListener("click", (e) => {
       e.stopPropagation();
-      openAccountModal(b.dataset.id, data);
+      openAccountModal(b.dataset.id);
     }),
   );
   grid.querySelectorAll(".del-acc").forEach((b) =>
-    b.addEventListener("click", (e) => {
+    b.addEventListener("click", async (e) => {
       e.stopPropagation();
       if (confirm("Eliminare questo conto?")) {
-        data.accounts = data.accounts.filter((a) => a.id !== b.dataset.id);
-        saveCurrentData(data);
-        renderAccounts();
+        state.data.accounts = state.data.accounts.filter(
+          (a) => a.id !== b.dataset.id,
+        );
+        await saveAccounts();
       }
     }),
   );
 }
 
-// ============ DEBITI & CREDITI ============
+// ============================================
+// DEBITI & CREDITI
+// ============================================
 function renderDebts() {
-  const data = getCurrentData();
-  if (!data) {
+  if (!state.data) {
     $("debtsList").innerHTML =
-      '<div class="empty-state"><i class="fas fa-user"></i><p>Seleziona un utente</p></div>';
-    $("dashDebts").textContent = "€ 0,00";
-    $("dashCredits").textContent = "€ 0,00";
-    $("dashNet").textContent = "€ 0,00";
+      '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento...</p></div>';
     return;
   }
-  const debts = data.debts.filter((d) => d.type === "debt");
-  const credits = data.debts.filter((d) => d.type === "credit");
+  const debts = state.data.debts.filter((d) => d.type === "debt");
+  const credits = state.data.debts.filter((d) => d.type === "credit");
   const totalDebts = debts.reduce(
     (s, d) => s + Math.max(0, d.totalAmount - d.paidAmount),
     0,
@@ -818,13 +761,13 @@ function renderDebts() {
   $("dashNet").style.color = net >= 0 ? "var(--income)" : "var(--expense)";
 
   const list = $("debtsList");
-  if (data.debts.length === 0) {
+  if (state.data.debts.length === 0) {
     list.innerHTML =
       '<div class="empty-state"><i class="fas fa-hand-holding-usd"></i><p>Nessun debito o credito registrato</p></div>';
     return;
   }
 
-  list.innerHTML = data.debts
+  list.innerHTML = state.data.debts
     .map((d) => {
       const progress = Math.min(100, (d.paidAmount / d.totalAmount) * 100);
       const remaining = Math.max(0, d.totalAmount - d.paidAmount);
@@ -858,24 +801,20 @@ window.openPaymentModal = (debtId) => {
   $("paymentDate").valueAsDate = new Date();
   $("paymentModal").classList.add("active");
 };
-window.deleteDebt = (debtId) => {
+window.deleteDebt = async (debtId) => {
   if (!confirm("Eliminare questo debito/credito?")) return;
-  const data = getCurrentData();
-  data.debts = data.debts.filter((d) => d.id !== debtId);
-  saveCurrentData(data);
-  renderDebts();
+  state.data.debts = state.data.debts.filter((d) => d.id !== debtId);
+  await saveDebts();
 };
-$("paymentForm").addEventListener("submit", (e) => {
+$("paymentForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const debtId = $("paymentDebtId").value;
   const amount = parseFloat($("paymentAmount").value);
-  const data = getCurrentData();
-  const debt = data.debts.find((d) => d.id === debtId);
+  const debt = state.data.debts.find((d) => d.id === debtId);
   if (debt) {
     debt.paidAmount = Math.min(debt.totalAmount, debt.paidAmount + amount);
-    saveCurrentData(data);
+    await saveDebts();
     $("paymentModal").classList.remove("active");
-    renderDebts();
   }
 });
 
@@ -902,9 +841,8 @@ document.querySelectorAll("#debtForm .type-btn").forEach((btn) =>
     state.currentDebtType = btn.dataset.debttype;
   }),
 );
-$("debtForm").addEventListener("submit", (e) => {
+$("debtForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const data = getCurrentData();
   const debt = {
     id: $("debtId").value || genId(),
     type: state.currentDebtType,
@@ -915,35 +853,34 @@ $("debtForm").addEventListener("submit", (e) => {
     date: $("debtDate").value,
     notes: $("debtNotes").value.trim(),
   };
-  const idx = data.debts.findIndex((d) => d.id === debt.id);
-  if (idx !== -1) data.debts[idx] = debt;
-  else data.debts.push(debt);
-  saveCurrentData(data);
+  const idx = state.data.debts.findIndex((d) => d.id === debt.id);
+  if (idx !== -1) state.data.debts[idx] = debt;
+  else state.data.debts.push(debt);
+  await saveDebts();
   $("debtModal").classList.remove("active");
-  renderDebts();
 });
 
-// ============ MODAL MOVIMENTO ============
-function populateCategorySelect(data) {
+// ============================================
+// MODAL MOVIMENTO
+// ============================================
+function populateCategorySelect() {
   const sel = $("mvCategory");
   sel.innerHTML =
-    data.categories
+    state.data.categories
       .filter((c) => c.type === state.currentType)
       .map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`)
       .join("") || '<option value="">Nessuna categoria</option>';
 }
-function populateAccountSelect(data) {
+function populateAccountSelect() {
   const sel = $("mvAccount");
-  sel.innerHTML = data.accounts.length
-    ? data.accounts
+  sel.innerHTML = state.data.accounts.length
+    ? state.data.accounts
         .map((a) => `<option value="${a.id}">${a.icon} ${a.name}</option>`)
         .join("")
     : '<option value="">Nessun conto</option>';
 }
 
 function openMovementModal(id = null) {
-  const data = getCurrentData();
-  if (!data) return;
   state.currentType = "income";
   document
     .querySelectorAll("#movementForm .type-btn")
@@ -953,7 +890,7 @@ function openMovementModal(id = null) {
     .classList.add("active");
 
   if (id) {
-    const m = data.movements.find((x) => x.id === id);
+    const m = state.data.movements.find((x) => x.id === id);
     if (!m) return;
     $("mvModalTitle").textContent = "Modifica Movimento";
     $("mvId").value = m.id;
@@ -965,8 +902,8 @@ function openMovementModal(id = null) {
     document
       .querySelectorAll("#movementForm .type-btn")
       .forEach((b) => b.classList.toggle("active", b.dataset.type === m.type));
-    populateCategorySelect(data);
-    populateAccountSelect(data);
+    populateCategorySelect();
+    populateAccountSelect();
     setTimeout(() => {
       $("mvCategory").value = m.categoryId;
       $("mvAccount").value = m.accountId;
@@ -976,8 +913,8 @@ function openMovementModal(id = null) {
     $("movementForm").reset();
     $("mvId").value = "";
     $("mvDate").valueAsDate = new Date();
-    populateCategorySelect(data);
-    populateAccountSelect(data);
+    populateCategorySelect();
+    populateAccountSelect();
   }
   $("movementModal").classList.add("active");
 }
@@ -989,15 +926,12 @@ document.querySelectorAll("#movementForm .type-btn").forEach((btn) =>
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     state.currentType = btn.dataset.type;
-    const data = getCurrentData();
-    if (data) populateCategorySelect(data);
+    populateCategorySelect();
   }),
 );
 
-$("movementForm").addEventListener("submit", (e) => {
+$("movementForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const data = getCurrentData();
-  if (!data) return;
   const mv = {
     id: $("mvId").value || genId(),
     type: state.currentType,
@@ -1008,21 +942,22 @@ $("movementForm").addEventListener("submit", (e) => {
     date: $("mvDate").value,
     notes: $("mvNotes").value.trim(),
   };
-  const idx = data.movements.findIndex((m) => m.id === mv.id);
-  if (idx !== -1) data.movements[idx] = mv;
-  else data.movements.push(mv);
-  saveCurrentData(data);
+  const idx = state.data.movements.findIndex((m) => m.id === mv.id);
+  if (idx !== -1) state.data.movements[idx] = mv;
+  else state.data.movements.push(mv);
+  await saveMovements();
   $("movementModal").classList.remove("active");
-  refreshCurrent();
 });
 
-// ============ VIEW MODAL ============
-function openViewModal(id, data) {
-  const m = data.movements.find((x) => x.id === id);
+// ============================================
+// VIEW MODAL
+// ============================================
+function openViewModal(id) {
+  const m = state.data.movements.find((x) => x.id === id);
   if (!m) return;
   state.currentViewId = id;
-  const cat = getCategory(m.categoryId, data);
-  const acc = getAccount(m.accountId, data);
+  const cat = getCategory(m.categoryId);
+  const acc = getAccount(m.accountId);
   const isIncome = m.type === "income";
   $("viewContent").innerHTML = `
         <div class="view-item"><label>Importo</label><p class="amount-big" style="color:${isIncome ? "var(--income)" : "var(--expense)"}">${isIncome ? "+" : "-"} ${formatMoney(m.amount)}</p></div>
@@ -1039,19 +974,21 @@ $("editFromViewBtn").addEventListener("click", () => {
   $("viewModal").classList.remove("active");
   setTimeout(() => openMovementModal(state.currentViewId), 200);
 });
-$("deleteFromViewBtn").addEventListener("click", () => {
+$("deleteFromViewBtn").addEventListener("click", async () => {
   if (!confirm("Eliminare questo movimento?")) return;
-  const data = getCurrentData();
-  data.movements = data.movements.filter((m) => m.id !== state.currentViewId);
-  saveCurrentData(data);
+  state.data.movements = state.data.movements.filter(
+    (m) => m.id !== state.currentViewId,
+  );
+  await saveMovements();
   $("viewModal").classList.remove("active");
-  refreshCurrent();
 });
 
-// ============ MODAL CATEGORIA ============
-function openCategoryModal(id = null, data, defaultType = "expense") {
+// ============================================
+// MODAL CATEGORIA
+// ============================================
+function openCategoryModal(id = null, defaultType = "expense") {
   if (id) {
-    const c = data.categories.find((x) => x.id === id);
+    const c = state.data.categories.find((x) => x.id === id);
     if (!c) return;
     $("catModalTitle").textContent = "Modifica Categoria";
     $("catId").value = c.id;
@@ -1087,10 +1024,8 @@ document.querySelectorAll("#categoryForm .type-btn").forEach((btn) =>
     state.currentCatType = btn.dataset.cattype;
   }),
 );
-$("categoryForm").addEventListener("submit", (e) => {
+$("categoryForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const data = getCurrentData();
-  if (!data) return;
   const cat = {
     id: $("catId").value || genId(),
     name: $("catName").value.trim(),
@@ -1098,18 +1033,19 @@ $("categoryForm").addEventListener("submit", (e) => {
     color: $("catColor").value,
     type: state.currentCatType,
   };
-  const idx = data.categories.findIndex((c) => c.id === cat.id);
-  if (idx !== -1) data.categories[idx] = cat;
-  else data.categories.push(cat);
-  saveCurrentData(data);
+  const idx = state.data.categories.findIndex((c) => c.id === cat.id);
+  if (idx !== -1) state.data.categories[idx] = cat;
+  else state.data.categories.push(cat);
+  await saveCategories();
   $("categoryModal").classList.remove("active");
-  renderCategories();
 });
 
-// ============ MODAL CONTO ============
-function openAccountModal(id = null, data) {
+// ============================================
+// MODAL CONTO
+// ============================================
+function openAccountModal(id = null) {
   if (id) {
-    const a = data.accounts.find((x) => x.id === id);
+    const a = state.data.accounts.find((x) => x.id === id);
     if (!a) return;
     $("accModalTitle").textContent = "Modifica Conto";
     $("accId").value = a.id;
@@ -1127,10 +1063,8 @@ function openAccountModal(id = null, data) {
   }
   $("accountModal").classList.add("active");
 }
-$("accountForm").addEventListener("submit", (e) => {
+$("accountForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const data = getCurrentData();
-  if (!data) return;
   const acc = {
     id: $("accId").value || genId(),
     name: $("accName").value.trim(),
@@ -1139,15 +1073,72 @@ $("accountForm").addEventListener("submit", (e) => {
     color: $("accColor").value,
     balance: parseFloat($("accBalance").value) || 0,
   };
-  const idx = data.accounts.findIndex((a) => a.id === acc.id);
-  if (idx !== -1) data.accounts[idx] = acc;
-  else data.accounts.push(acc);
-  saveCurrentData(data);
+  const idx = state.data.accounts.findIndex((a) => a.id === acc.id);
+  if (idx !== -1) state.data.accounts[idx] = acc;
+  else state.data.accounts.push(acc);
+  await saveAccounts();
   $("accountModal").classList.remove("active");
-  renderAccounts();
 });
 
-// ============ CHIUSURA MODAL ============
+// ============================================
+// IMPORT/EXPORT (locale, per backup)
+// ============================================
+$("exportBtn").addEventListener("click", () => {
+  if (!state.data) return;
+  const data = {
+    email: state.currentEmail,
+    uid: state.currentUser,
+    exportedAt: new Date().toISOString(),
+    movements: state.data.movements,
+    categories: state.data.categories,
+    accounts: state.data.accounts,
+    debts: state.data.debts,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `abtracker_backup_${state.currentEmail.replace(/[@.]/g, "_")}_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm("Questo sostituirà i tuoi dati attuali. Continuare?"))
+        return;
+      state.data = {
+        movements: data.movements || [],
+        categories: data.categories || [...DEFAULT_CATEGORIES],
+        accounts: data.accounts || [...DEFAULT_ACCOUNTS],
+        debts: data.debts || [],
+      };
+      await Promise.all([
+        saveMovements(),
+        saveCategories(),
+        saveAccounts(),
+        saveDebts(),
+      ]);
+      alert("Dati importati con successo!");
+    } catch (err) {
+      alert("File non valido");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+// ============================================
+// CHIUSURA MODAL
+// ============================================
 function closeAllModals() {
   document
     .querySelectorAll(".modal")
@@ -1165,47 +1156,37 @@ $("cancelCatBtn").addEventListener("click", closeAllModals);
 $("cancelAccBtn").addEventListener("click", closeAllModals);
 $("cancelDebtBtn").addEventListener("click", closeAllModals);
 $("cancelPaymentBtn").addEventListener("click", closeAllModals);
-$("cancelUserBtn").addEventListener("click", closeAllModals);
 
-// ============ FAB ============
+// ============================================
+// FAB
+// ============================================
 $("fabAdd").addEventListener("click", () => {
   if (state.currentSection === "categories") $("addExpenseCategoryBtn").click();
   else if (state.currentSection === "accounts") $("addAccountBtn").click();
   else if (state.currentSection === "debts") $("addDebtBtn").click();
-  else if (state.currentSection === "settings") $("addUserBtn").click();
   else openMovementModal();
 });
-$("addIncomeCategoryBtn").addEventListener("click", () => {
-  const d = getCurrentData();
-  if (d) openCategoryModal(null, d, "income");
-});
-$("addExpenseCategoryBtn").addEventListener("click", () => {
-  const d = getCurrentData();
-  if (d) openCategoryModal(null, d, "expense");
-});
-$("addAccountBtn").addEventListener("click", () => {
-  const d = getCurrentData();
-  if (d) openAccountModal(null, d);
-});
+$("addIncomeCategoryBtn").addEventListener("click", () =>
+  openCategoryModal(null, "income"),
+);
+$("addExpenseCategoryBtn").addEventListener("click", () =>
+  openCategoryModal(null, "expense"),
+);
+$("addAccountBtn").addEventListener("click", () => openAccountModal(null));
 
-// ============ REFRESH ============
+// ============================================
+// REFRESH
+// ============================================
 function refreshCurrent() {
+  if (!state.data) return;
   if (state.currentSection === "dashboard") renderDashboard();
   else if (state.currentSection === "movements") renderMovements();
   else if (state.currentSection === "categories") renderCategories();
   else if (state.currentSection === "accounts") renderAccounts();
   else if (state.currentSection === "debts") renderDebts();
-  else if (state.currentSection === "settings") {
-    renderUsers();
-    updatePasswordStatus();
-  }
 }
 
-// ============ INIT ============
+// ============================================
+// INIT
+// ============================================
 initTheme();
-if (state.users.length > 0 && !state.currentUser) {
-  state.currentUser = state.users[0].id;
-  localStorage.setItem("abt_currentUser", state.currentUser);
-}
-updateUserDisplay();
-navigateTo("dashboard");

@@ -22,6 +22,74 @@
     </head>
     <body>
         <div class="app">
+            <!-- SCHERMATA LOGIN/REGISTRAZIONE -->
+            <div class="auth-screen" id="authScreen">
+                <div class="auth-container">
+                    <div class="auth-logo">
+                        <span class="logo-ab">AB</span> Tracker
+                    </div>
+                    <h2 class="auth-title" id="authTitle">Accedi</h2>
+
+                    <form id="authForm">
+                        <div class="form-group">
+                            <label for="authEmail">Email</label>
+                            <input
+                                type="email"
+                                id="authEmail"
+                                required
+                                placeholder="nome@esempio.com"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="authPassword">Password</label>
+                            <input
+                                type="password"
+                                id="authPassword"
+                                required
+                                placeholder="••••••••"
+                                minlength="6"
+                            />
+                        </div>
+                        <div
+                            class="form-group"
+                            id="authNameGroup"
+                            style="display: none"
+                        >
+                            <label for="authName">Nome (opzionale)</label>
+                            <input
+                                type="text"
+                                id="authName"
+                                placeholder="Il tuo nome"
+                            />
+                        </div>
+                        <div id="authError" class="error-msg"></div>
+                        <button
+                            type="submit"
+                            class="btn-save"
+                            id="authSubmitBtn"
+                            style="width: 100%; margin-top: 10px"
+                        >
+                            Accedi
+                        </button>
+                    </form>
+
+                    <div class="auth-switch">
+                        <span id="authSwitchText">Non hai un account?</span>
+                        <button class="link-btn" id="authSwitchBtn">
+                            Registrati
+                        </button>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="offlineModeBtn"
+                        class="btn-outline"
+                        style="width: 100%; margin-top: 15px"
+                    >
+                        <i class="fas fa-wifi-slash"></i> Test Offline (Locale)
+                    </button>
+                </div>
+            </div>
             <!-- Overlay per chiudere la sidebar su mobile -->
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
             <!-- Sidebar -->
@@ -310,29 +378,6 @@
                         </div>
 
                         <div class="panel">
-                            <div class="panel-header"><h2>Sicurezza</h2></div>
-                            <div class="settings-row">
-                                <div>
-                                    <div class="settings-title">
-                                        Password profilo
-                                    </div>
-                                    <div
-                                        class="settings-desc"
-                                        id="passwordStatus"
-                                    >
-                                        Nessuna password impostata
-                                    </div>
-                                </div>
-                                <button
-                                    class="btn-primary"
-                                    id="managePasswordBtn"
-                                >
-                                    <i class="fas fa-key"></i> Gestisci
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="panel">
                             <div class="panel-header"><h2>Dati</h2></div>
                             <div class="settings-actions">
                                 <button class="btn-action" id="exportBtn">
@@ -347,24 +392,30 @@
                                     accept=".json"
                                     style="display: none"
                                 />
-                                <button
-                                    class="btn-action danger"
-                                    id="clearAllBtn"
-                                >
-                                    <i class="fas fa-trash-alt"></i> Elimina
-                                    tutti i dati
-                                </button>
                             </div>
                         </div>
 
                         <div class="panel">
-                            <div class="panel-header">
-                                <h2>Gestione Utenti</h2>
-                                <button class="btn-primary" id="addUserBtn">
-                                    <i class="fas fa-plus"></i> Nuovo Utente
+                            <div class="panel-header"><h2>Account</h2></div>
+                            <div class="settings-row">
+                                <div>
+                                    <div
+                                        class="settings-title"
+                                        id="settingsEmail"
+                                    >
+                                        —
+                                    </div>
+                                    <div class="settings-desc">
+                                        Email account collegato
+                                    </div>
+                                </div>
+                                <button
+                                    class="btn-action danger"
+                                    id="logoutBtn"
+                                >
+                                    <i class="fas fa-sign-out-alt"></i> Logout
                                 </button>
                             </div>
-                            <div class="users-list" id="usersList"></div>
                         </div>
                     </section>
                 </div>
@@ -932,12 +983,33 @@
                             <button type="submit" class="btn-save">
                                 Accedi
                             </button>
+                            <button
+                                type="button"
+                                id="offlineModeBtn"
+                                style="
+                                    display: none;
+                                    width: 100%;
+                                    margin-top: 15px;
+                                    padding: 10px;
+                                    background: #f3f4f6;
+                                    border: 1px solid #d1d5db;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                "
+                            >
+                                <i class="fas fa-wifi-slash"></i> Test Offline
+                                (Solo Locale)
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
+        <!-- Firebase SDK -->
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
         <script src="script.js"></script>
     </body>
 </html>
