@@ -1,974 +1,347 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>AB Tracker</title>
-        <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-        <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-        <meta name="theme-color" content="#4f46e5" />
-        <link rel="stylesheet" href="style.css" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    </head>
-    <body>
-        <div class="auth-screen" id="authScreen">
-            <div class="auth-container">
-                <div class="auth-logo">
-                    <span class="logo-ab">AB TRACKER</span>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AB Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+    <div class="auth-container">
+        <div class="auth-logo"><span class="logo-ab">AB</span> Tracker</div>
+        <h2 class="auth-title" id="authTitle">Accedi</h2>
+        <form id="authForm">
+            <div class="form-group">
+                <label for="authEmail">Email</label>
+                <input type="email" id="authEmail" required placeholder="nome@esempio.com">
+            </div>
+            <div class="form-group password-group">
+                <label for="authPassword">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="authPassword" required placeholder="••••••••" minlength="6">
+                    <button type="button" class="toggle-password" data-target="authPassword"><i class="fas fa-eye"></i></button>
                 </div>
-                <h2 class="auth-title" id="authTitle">Accedi</h2>
-                <form id="authForm">
-                    <div class="form-group">
-                        <label for="authEmail">Email</label>
-                        <input
-                            type="email"
-                            id="authEmail"
-                            required
-                            placeholder="nome@esempio.com"
-                        />
-                    </div>
-                    <div class="form-group password-group">
-                        <label for="authPassword">Password</label>
-                        <div class="password-wrapper">
-                            <input
-                                type="password"
-                                id="authPassword"
-                                required
-                                placeholder="••••••••"
-                                minlength="6"
-                            />
-                            <button
-                                type="button"
-                                class="toggle-password"
-                                data-target="authPassword"
-                            >
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="auth-forgot">
-                        <button
-                            type="button"
-                            class="link-btn"
-                            id="forgotPasswordBtn"
-                        >
-                            Password dimenticata?
-                        </button>
-                    </div>
-                    <div
-                        class="form-group"
-                        id="authNameGroup"
-                        style="display: none"
-                    >
-                        <label for="authName">Nome (opzionale)</label>
-                        <input
-                            type="text"
-                            id="authName"
-                            placeholder="Il tuo nome"
-                        />
-                    </div>
-                    <div id="authError" class="error-msg"></div>
-                    <button
-                        type="submit"
-                        class="btn-save"
-                        id="authSubmitBtn"
-                        style="width: 100%; margin-top: 10px"
-                    >
-                        Accedi
-                    </button>
-                </form>
-                <div class="auth-switch">
-                    <span id="authSwitchText">Non hai un account?</span>
-                    <button type="button" class="link-btn" id="authSwitchBtn">
-                        Registrati
-                    </button>
-                </div>
-                <button type="button" id="offlineModeBtn">
-                    <i class="fas fa-wifi-slash"></i> Test Offline (Locale)
+            </div>
+            <div class="auth-forgot">
+                <button type="button" class="link-btn" id="forgotPasswordBtn">Password dimenticata?</button>
+            </div>
+            <div class="form-group" id="authNameGroup" style="display:none">
+                <label for="authName">Nome (opzionale)</label>
+                <input type="text" id="authName" placeholder="Il tuo nome">
+            </div>
+            <div id="authError" class="error-msg"></div>
+            <button type="submit" class="btn-save" id="authSubmitBtn" style="width:100%;margin-top:10px">Accedi</button>
+        </form>
+        <div class="auth-switch">
+            <span id="authSwitchText">Non hai un account?</span>
+            <button type="button" class="link-btn" id="authSwitchBtn">Registrati</button>
+        </div>
+        <button type="button" id="offlineModeBtn"><i class="fas fa-wifi-slash"></i> Test Offline (Locale)</button>
+    </div>
+</div>
+
+<div class="app">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar">
+        <div class="logo"><span class="logo-ab">AB</span> Tracker</div>
+        <div class="theme-toggle-sidebar">
+            <button class="theme-btn" id="themeBtnSidebar"><i class="fas fa-moon" id="themeIconSidebar"></i><span id="themeLabelSidebar">Dark Mode</span></button>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-link active" data-section="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+            <button class="nav-link" data-section="movements"><i class="fas fa-exchange-alt"></i> Movimenti</button>
+            <button class="nav-link" data-section="categories"><i class="fas fa-tags"></i> Categorie</button>
+            <button class="nav-link" data-section="accounts"><i class="fas fa-wallet"></i> Conti</button>
+            <button class="nav-link" data-section="debts"><i class="fas fa-hand-holding-usd"></i> Debiti &amp; Crediti</button>
+            <button class="nav-link" data-section="settings"><i class="fas fa-cog"></i> Impostazioni</button>
+        </nav>
+        <div class="sidebar-footer"><span class="version">v3.0 • Cloud Sync</span></div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            <div class="user-selector">
+                <button class="user-btn profile-trigger" id="userBtn" title="Cambia profilo">
+                    <span class="profile-dot-inline" id="profileDot"></span>
+                    <span class="user-name" id="userName">—</span>
+                    <i class="fas fa-chevron-down"></i>
                 </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <div id="profilesList"></div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-footer">
+                        <div id="dropdownEmail" style="font-size:11px;color:var(--text-muted);text-align:center"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="fab-add" id="fabAdd"><i class="fas fa-plus"></i></button>
+        </header>
+
+        <div class="content">
+            <section class="section active" id="section-dashboard">
+                <div class="month-badge" id="dashMonthBadge">Mese corrente</div>
+                <div class="summary-grid">
+                    <div class="summary-card income">
+                        <div class="sc-header"><i class="fas fa-arrow-down"></i><span class="sc-label">Entrate del mese</span></div>
+                        <div class="sc-amount" id="dashIncome">€ 0,00</div>
+                    </div>
+                    <div class="summary-card expense">
+                        <div class="sc-header"><i class="fas fa-arrow-up"></i><span class="sc-label">Uscite del mese</span></div>
+                        <div class="sc-amount" id="dashExpense">€ 0,00</div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2>Ultimi Movimenti</h2><button class="link-btn" data-goto="movements">Vedi tutti →</button></div>
+                    <div class="movements-list" id="dashMovementsList"></div>
+                </div>
+            </section>
+
+            <section class="section" id="section-movements">
+                <div class="summary-grid">
+                    <div class="summary-card income">
+                        <div class="sc-header"><i class="fas fa-arrow-down"></i><span class="sc-label">Entrate totali</span></div>
+                        <div class="sc-amount" id="movIncome">€ 0,00</div>
+                    </div>
+                    <div class="summary-card expense">
+                        <div class="sc-header"><i class="fas fa-arrow-up"></i><span class="sc-label">Uscite totali</span></div>
+                        <div class="sc-amount" id="movExpense">€ 0,00</div>
+                    </div>
+                </div>
+                <div class="toolbar">
+                    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Cerca movimenti..."></div>
+                    <select id="filterType" class="filter-select"><option value="all">Tutti i tipi</option><option value="income">Entrate</option><option value="expense">Uscite</option></select>
+                    <select id="filterMonth" class="filter-select"><option value="all">Tutti i mesi</option></select>
+                    <select id="filterYear" class="filter-select"><option value="all">Tutti gli anni</option></select>
+                </div>
+                <div class="movements-list" id="movementsList"></div>
+            </section>
+
+            <section class="section" id="section-categories">
+                <div class="panel">
+                    <div class="panel-header"><h2 style="color:var(--income)"><i class="fas fa-arrow-down" style="margin-right:8px"></i>Categorie Entrata</h2><button class="btn-primary" id="addIncomeCategoryBtn"><i class="fas fa-plus"></i> Nuova</button></div>
+                    <div class="categories-grid" id="incomeCategoriesGrid"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2 style="color:var(--expense)"><i class="fas fa-arrow-up" style="margin-right:8px"></i>Categorie Uscita</h2><button class="btn-primary" id="addExpenseCategoryBtn"><i class="fas fa-plus"></i> Nuova</button></div>
+                    <div class="categories-grid" id="expenseCategoriesGrid"></div>
+                </div>
+            </section>
+
+            <section class="section" id="section-accounts">
+                <div class="panel">
+                    <div class="panel-header"><h2>Conti &amp; Carte</h2><button class="btn-primary" id="addAccountBtn"><i class="fas fa-plus"></i> Nuovo</button></div>
+                    <div class="accounts-grid" id="accountsGrid"></div>
+                </div>
+            </section>
+
+            <section class="section" id="section-debts">
+                <div class="summary-grid debts-summary">
+                    <div class="summary-card debt"><div class="sc-header"><i class="fas fa-hand-holding-usd"></i><span class="sc-label">Debiti Totali</span></div><div class="sc-amount" id="dashDebts">€ 0,00</div><div class="sc-sublabel" id="dashDebtsCount">0 debiti aperti</div></div>
+                    <div class="summary-card credit"><div class="sc-header"><i class="fas fa-hand-holding-heart"></i><span class="sc-label">Crediti Totali</span></div><div class="sc-amount" id="dashCredits">€ 0,00</div><div class="sc-sublabel" id="dashCreditsCount">0 crediti aperti</div></div>
+                    <div class="summary-card net"><div class="sc-header"><i class="fas fa-balance-scale"></i><span class="sc-label">Saldo Netto</span></div><div class="sc-amount" id="dashNet">€ 0,00</div><div class="sc-sublabel" id="dashNetLabel">Crediti − Debiti</div></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2>Lista Debiti &amp; Crediti</h2><button class="btn-primary" id="addDebtBtn"><i class="fas fa-plus"></i> Nuovo</button></div>
+                    <div class="debts-list" id="debtsList"></div>
+                </div>
+            </section>
+
+            <section class="section" id="section-settings">
+                <div class="panel">
+                    <div class="panel-header"><h2>Aspetto</h2></div>
+                    <div class="settings-row">
+                        <div><div class="settings-title">Tema scuro</div><div class="settings-desc">Attiva la dark mode</div></div>
+                        <label class="switch"><input type="checkbox" id="themeToggle"><span class="slider"></span></label>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2>Dati</h2></div>
+                    <div class="settings-actions">
+                        <button class="btn-action" id="exportBtn"><i class="fas fa-download"></i> Esporta</button>
+                        <button class="btn-action" id="importBtn"><i class="fas fa-upload"></i> Importa</button>
+                        <input type="file" id="importFile" accept=".json" style="display:none">
+                        <button class="btn-action danger" id="clearAllDataBtn"><i class="fas fa-trash-alt"></i> Elimina dati</button>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2>Account</h2></div>
+                    <div class="settings-row">
+                        <div><div class="settings-title" id="settingsEmail">—</div><div class="settings-desc">Email collegata</div></div>
+                        <button class="btn-action danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2>Gestione Profili</h2><button class="btn-primary" id="addProfileBtn2"><i class="fas fa-plus"></i> Nuovo</button></div>
+                    <div class="users-list" id="profilesListSettings"></div>
+                </div>
+                <div class="panel danger-zone">
+                    <div class="panel-header"><h2><i class="fas fa-exclamation-triangle" style="margin-right:8px"></i>Zona pericolosa</h2></div>
+                    <div class="settings-row">
+                        <div><div class="settings-title">Elimina il tuo account</div><div class="settings-desc">Azione irreversibile. Account e dati verranno persi per sempre.</div></div>
+                        <button class="btn-action danger" id="deleteAccountBtn"><i class="fas fa-user-times"></i> Elimina account</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-link active" data-section="dashboard"><i class="fas fa-chart-pie"></i><span>Home</span></button>
+        <button class="nav-link" data-section="movements"><i class="fas fa-exchange-alt"></i><span>Movimenti</span></button>
+        <button class="nav-link" data-section="debts"><i class="fas fa-hand-holding-usd"></i><span>Debiti</span></button>
+        <button class="nav-link" data-section="settings"><i class="fas fa-cog"></i><span>Impost.</span></button>
+    </nav>
+
+    <div class="modal" id="movementModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="mvModalTitle">Nuovo Movimento</h3><button class="close-modal">&times;</button></div>
+            <form id="movementForm">
+                <input type="hidden" id="mvId">
+                <div class="form-group"><label>Tipo</label><div class="type-selector"><button type="button" class="type-btn active" data-type="income"><i class="fas fa-arrow-down"></i> Entrata</button><button type="button" class="type-btn" data-type="expense"><i class="fas fa-arrow-up"></i> Uscita</button></div></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="mvAmount">Importo (€)</label><input type="number" id="mvAmount" step="0.01" min="0.01" required placeholder="0,00"></div>
+                    <div class="form-group"><label for="mvDate">Data</label><input type="date" id="mvDate" required></div>
+                </div>
+                <div class="form-group"><label for="mvDescription">Descrizione</label><input type="text" id="mvDescription" required placeholder="Es. Spesa supermercato"></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="mvCategory">Categoria</label><select id="mvCategory" required></select></div>
+                    <div class="form-group"><label for="mvAccount">Conto</label><select id="mvAccount"></select></div>
+                </div>
+                <div class="form-group"><label for="mvNotes">Note</label><textarea id="mvNotes" rows="2"></textarea></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelMvBtn">Annulla</button><button type="submit" class="btn-save">Salva</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="viewModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3>Dettaglio Movimento</h3><button class="close-modal">&times;</button></div>
+            <div class="view-content" id="viewContent"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="closeViewBtn">Chiudi</button>
+                <button type="button" class="btn-edit" id="editFromViewBtn"><i class="fas fa-pen"></i> Modifica</button>
+                <button type="button" class="btn-delete" id="deleteFromViewBtn"><i class="fas fa-trash"></i> Elimina</button>
             </div>
         </div>
+    </div>
 
-        <div class="app">
-            <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-            <aside class="sidebar">
-                <div class="logo"><span class="logo-ab">AB TRACKER</span></div>
-                <div class="theme-toggle-sidebar">
-                    <button class="theme-btn" id="themeBtnSidebar">
-                        <i class="fas fa-moon" id="themeIconSidebar"></i
-                        ><span id="themeLabelSidebar">Dark Mode</span>
-                    </button>
+    <div class="modal" id="categoryModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="catModalTitle">Nuova Categoria</h3><button class="close-modal">&times;</button></div>
+            <form id="categoryForm">
+                <input type="hidden" id="catId">
+                <div class="form-group"><label for="catName">Nome Categoria</label><input type="text" id="catName" required placeholder="Es. Alimentari"></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="catIcon">Icona</label><input type="text" id="catIcon" required placeholder="" maxlength="2"></div>
+                    <div class="form-group"><label for="catColor">Colore</label><input type="color" id="catColor" value="#4f46e5"></div>
                 </div>
-                <nav class="sidebar-nav">
-                    <button class="nav-link active" data-section="dashboard">
-                        <i class="fas fa-chart-pie"></i> Dashboard
-                    </button>
-                    <button class="nav-link" data-section="movements">
-                        <i class="fas fa-exchange-alt"></i> Movimenti
-                    </button>
-                    <button class="nav-link" data-section="categories">
-                        <i class="fas fa-tags"></i> Categorie
-                    </button>
-                    <button class="nav-link" data-section="accounts">
-                        <i class="fas fa-wallet"></i> Conti
-                    </button>
-                    <button class="nav-link" data-section="debts">
-                        <i class="fas fa-hand-holding-usd"></i> Debiti & Crediti
-                    </button>
-                    <button class="nav-link" data-section="settings">
-                        <i class="fas fa-cog"></i> Impostazioni
-                    </button>
-                </nav>
-                <div class="sidebar-footer">
-                    <span class="version">v3.0 • Cloud Sync</span>
-                </div>
-            </aside>
-
-            <main class="main">
-                <header class="topbar">
-                    <button class="menu-toggle" id="menuToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
-                    <div class="user-selector">
-                        <button
-                            class="user-btn profile-trigger"
-                            id="userBtn"
-                            title="Cambia profilo"
-                        >
-                            <span
-                                class="profile-dot-inline"
-                                id="profileDot"
-                            ></span>
-                            <span class="user-name" id="userName">—</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="user-dropdown" id="userDropdown">
-                            <div id="profilesList"></div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-footer">
-                                <div
-                                    id="dropdownEmail"
-                                    style="
-                                        font-size: 11px;
-                                        color: var(--text-muted);
-                                        text-align: center;
-                                    "
-                                ></div>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="fab-add" id="fabAdd">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </header>
-
-                <div class="content">
-                    <section class="section active" id="section-dashboard">
-                        <div class="month-badge" id="dashMonthBadge">
-                            Mese corrente
-                        </div>
-                        <div class="summary-grid">
-                            <div class="summary-card income">
-                                <div class="sc-header">
-                                    <i class="fas fa-arrow-down"></i
-                                    ><span class="sc-label"
-                                        >Entrate del mese</span
-                                    >
-                                </div>
-                                <div class="sc-amount" id="dashIncome">
-                                    € 0,00
-                                </div>
-                            </div>
-                            <div class="summary-card expense">
-                                <div class="sc-header">
-                                    <i class="fas fa-arrow-up"></i
-                                    ><span class="sc-label"
-                                        >Uscite del mese</span
-                                    >
-                                </div>
-                                <div class="sc-amount" id="dashExpense">
-                                    € 0,00
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h2>Ultimi Movimenti</h2>
-                                <button class="link-btn" data-goto="movements">
-                                    Vedi tutti →
-                                </button>
-                            </div>
-                            <div
-                                class="movements-list"
-                                id="dashMovementsList"
-                            ></div>
-                        </div>
-                    </section>
-
-                    <section class="section" id="section-movements">
-                        <div class="summary-grid">
-                            <div class="summary-card income">
-                                <div class="sc-header">
-                                    <i class="fas fa-arrow-down"></i
-                                    ><span class="sc-label"
-                                        >Entrate totali</span
-                                    >
-                                </div>
-                                <div class="sc-amount" id="movIncome">
-                                    € 0,00
-                                </div>
-                            </div>
-                            <div class="summary-card expense">
-                                <div class="sc-header">
-                                    <i class="fas fa-arrow-up"></i
-                                    ><span class="sc-label">Uscite totali</span>
-                                </div>
-                                <div class="sc-amount" id="movExpense">
-                                    € 0,00
-                                </div>
-                            </div>
-                        </div>
-                        <div class="toolbar">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i
-                                ><input
-                                    type="text"
-                                    id="searchInput"
-                                    placeholder="Cerca movimenti..."
-                                />
-                            </div>
-                            <select id="filterType" class="filter-select">
-                                <option value="all">Tutti i tipi</option>
-                                <option value="income">Entrate</option>
-                                <option value="expense">Uscite</option>
-                            </select>
-                            <select id="filterMonth" class="filter-select">
-                                <option value="all">Tutti i mesi</option>
-                            </select>
-                            <select id="filterYear" class="filter-select">
-                                <option value="all">Tutti gli anni</option>
-                            </select>
-                        </div>
-                        <div class="movements-list" id="movementsList"></div>
-                    </section>
-
-                    <section class="section" id="section-categories">
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h2 style="color: var(--income)">
-                                    <i
-                                        class="fas fa-arrow-down"
-                                        style="margin-right: 8px"
-                                    ></i
-                                    >Categorie Entrata
-                                </h2>
-                                <button
-                                    class="btn-primary"
-                                    id="addIncomeCategoryBtn"
-                                >
-                                    <i class="fas fa-plus"></i> Nuova
-                                </button>
-                            </div>
-                            <div
-                                class="categories-grid"
-                                id="incomeCategoriesGrid"
-                            ></div>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h2 style="color: var(--expense)">
-                                    <i
-                                        class="fas fa-arrow-up"
-                                        style="margin-right: 8px"
-                                    ></i
-                                    >Categorie Uscita
-                                </h2>
-                                <button
-                                    class="btn-primary"
-                                    id="addExpenseCategoryBtn"
-                                >
-                                    <i class="fas fa-plus"></i> Nuova
-                                </button>
-                            </div>
-                            <div
-                                class="categories-grid"
-                                id="expenseCategoriesGrid"
-                            ></div>
-                        </div>
-                    </section>
-
-                    <section class="section" id="section-accounts">
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h2>Conti & Carte</h2>
-                                <button class="btn-primary" id="addAccountBtn">
-                                    <i class="fas fa-plus"></i> Nuovo
-                                </button>
-                            </div>
-                            <div class="accounts-grid" id="accountsGrid"></div>
-                        </div>
-                    </section>
-
-                    <section class="section" id="section-debts">
-                        <div class="summary-grid debts-summary">
-                            <div class="summary-card debt">
-                                <div class="sc-header">
-                                    <i class="fas fa-hand-holding-usd"></i
-                                    ><span class="sc-label">Debiti Totali</span>
-                                </div>
-                                <div class="sc-amount" id="dashDebts">
-                                    € 0,00
-                                </div>
-                                <div class="sc-sublabel" id="dashDebtsCount">
-                                    0 debiti aperti
-                                </div>
-                            </div>
-                            <div class="summary-card credit">
-                                <div class="sc-header">
-                                    <i class="fas fa-hand-holding-heart"></i
-                                    ><span class="sc-label"
-                                        >Crediti Totali</span
-                                    >
-                                </div>
-                                <div class="sc-amount" id="dashCredits">
-                                    € 0,00
-                                </div>
-                                <div class="sc-sublabel" id="dashCreditsCount">
-                                    0 crediti aperti
-                                </div>
-                            </div>
-                            <div class="summary-card net">
-                                <div class="sc-header">
-                                    <i class="fas fa-balance-scale"></i
-                                    ><span class="sc-label">Saldo Netto</span>
-                                </div>
-                                <div class="sc-amount" id="dashNet">€ 0,00</div>
-                                <div class="sc-sublabel" id="dashNetLabel">
-                                    Crediti − Debiti
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h2>Lista Debiti & Crediti</h2>
-                                <button class="btn-primary" id="addDebtBtn">
-                                    <i class="fas fa-plus"></i> Nuovo
-                                </button>
-                            </div>
-                            <div class="debts-list" id="debtsList"></div>
-                        </div>
-                    </section>
-
-                    <section class="section" id="section-settings">
-                        <div class="panel">
-                            <div class="panel-header"><h2>Aspetto</h2></div>
-                            <div class="settings-row">
-                                <div>
-                                    <div class="settings-title">Tema scuro</div>
-                                    <div class="settings-desc">
-                                        Attiva la dark mode
-                                    </div>
-                                </div>
-                                <label class="switch"
-                                    ><input
-                                        type="checkbox"
-                                        id="themeToggle" /><span
-                                        class="slider"
-                                    ></span
-                                ></label>
-                            </div>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-header"><h2>Dati</h2></div>
-                            <div class="settings-actions">
-                                <button class="btn-action" id="exportBtn">
-                                    <i class="fas fa-download"></i> Esporta
-                                </button>
-                                <button class="btn-action" id="importBtn">
-                                    <i class="fas fa-upload"></i> Importa
-                                </button>
-                                <input
-                                    type="file"
-                                    id="importFile"
-                                    accept=".json"
-                                    style="display: none"
-                                />
-                                <button
-                                    class="btn-action danger"
-                                    id="clearAllDataBtn"
-                                >
-                                    <i class="fas fa-trash-alt"></i> Elimina
-                                    dati
-                                </button>
-                            </div>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-header"><h2>Account</h2></div>
-                            <div class="settings-row">
-                                <div>
-                                    <div
-                                        class="settings-title"
-                                        id="settingsEmail"
-                                    >
-                                        —
-                                    </div>
-                                    <div class="settings-desc">
-                                        Email collegata
-                                    </div>
-                                </div>
-                                <button
-                                    class="btn-action danger"
-                                    id="logoutBtn"
-                                >
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </button>
-                            </div>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h2>Gestione Profili</h2>
-                                <button class="btn-primary" id="addProfileBtn2">
-                                    <i class="fas fa-plus"></i> Nuovo
-                                </button>
-                            </div>
-                            <div
-                                class="users-list"
-                                id="profilesListSettings"
-                            ></div>
-                        </div>
-                        <div class="panel danger-zone">
-                            <div class="panel-header">
-                                <h2>
-                                    <i
-                                        class="fas fa-exclamation-triangle"
-                                        style="margin-right: 8px"
-                                    ></i
-                                    >Zona pericolosa
-                                </h2>
-                            </div>
-                            <div class="settings-row">
-                                <div>
-                                    <div class="settings-title">
-                                        Elimina il tuo account
-                                    </div>
-                                    <div class="settings-desc">
-                                        Azione irreversibile. Account e dati
-                                        verranno persi per sempre.
-                                    </div>
-                                </div>
-                                <button
-                                    class="btn-action danger"
-                                    id="deleteAccountBtn"
-                                >
-                                    <i class="fas fa-user-times"></i> Elimina
-                                    account
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </main>
-
-            <nav class="bottom-nav">
-                <button class="nav-link active" data-section="dashboard">
-                    <i class="fas fa-chart-pie"></i><span>Home</span>
-                </button>
-                <button class="nav-link" data-section="movements">
-                    <i class="fas fa-exchange-alt"></i><span>Movimenti</span>
-                </button>
-                <button class="nav-link" data-section="debts">
-                    <i class="fas fa-hand-holding-usd"></i><span>Debiti</span>
-                </button>
-                <button class="nav-link" data-section="settings">
-                    <i class="fas fa-cog"></i><span>Impost.</span>
-                </button>
-            </nav>
-
-            <!-- MODALS -->
-            <div class="modal" id="movementModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="mvModalTitle">Nuovo Movimento</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="movementForm">
-                        <input type="hidden" id="mvId" />
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <div class="type-selector">
-                                <button
-                                    type="button"
-                                    class="type-btn active"
-                                    data-type="income"
-                                >
-                                    <i class="fas fa-arrow-down"></i>
-                                    Entrata</button
-                                ><button
-                                    type="button"
-                                    class="type-btn"
-                                    data-type="expense"
-                                >
-                                    <i class="fas fa-arrow-up"></i> Uscita
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="mvAmount">Importo (€)</label
-                                ><input
-                                    type="number"
-                                    id="mvAmount"
-                                    step="0.01"
-                                    min="0.01"
-                                    required
-                                    placeholder="0,00"
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label for="mvDate">Data</label
-                                ><input type="date" id="mvDate" required />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="mvDescription">Descrizione</label
-                            ><input
-                                type="text"
-                                id="mvDescription"
-                                required
-                                placeholder="Es. Spesa supermercato"
-                            />
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="mvCategory">Categoria</label
-                                ><select id="mvCategory" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label for="mvAccount">Conto</label
-                                ><select id="mvAccount"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="mvNotes">Note</label
-                            ><textarea id="mvNotes" rows="2"></textarea>
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelMvBtn"
-                            >
-                                Annulla</button
-                            ><button type="submit" class="btn-save">
-                                Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="viewModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Dettaglio Movimento</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <div class="view-content" id="viewContent"></div>
-                    <div class="modal-actions">
-                        <button
-                            type="button"
-                            class="btn-cancel"
-                            id="closeViewBtn"
-                        >
-                            Chiudi
-                        </button>
-                        <button
-                            type="button"
-                            class="btn-edit"
-                            id="editFromViewBtn"
-                        >
-                            <i class="fas fa-pen"></i> Modifica
-                        </button>
-                        <button
-                            type="button"
-                            class="btn-delete"
-                            id="deleteFromViewBtn"
-                        >
-                            <i class="fas fa-trash"></i> Elimina
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal" id="categoryModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="catModalTitle">Nuova Categoria</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="categoryForm">
-                        <input type="hidden" id="catId" />
-                        <div class="form-group">
-                            <label for="catName">Nome Categoria</label
-                            ><input
-                                type="text"
-                                id="catName"
-                                required
-                                placeholder="Es. Alimentari"
-                            />
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="catIcon">Icona</label
-                                ><input
-                                    type="text"
-                                    id="catIcon"
-                                    required
-                                    placeholder=""
-                                    maxlength="2"
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label for="catColor">Colore</label
-                                ><input
-                                    type="color"
-                                    id="catColor"
-                                    value="#4f46e5"
-                                />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <div class="type-selector">
-                                <button
-                                    type="button"
-                                    class="type-btn active"
-                                    data-cattype="expense"
-                                >
-                                    Uscita</button
-                                ><button
-                                    type="button"
-                                    class="type-btn"
-                                    data-cattype="income"
-                                >
-                                    Entrata
-                                </button>
-                            </div>
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelCatBtn"
-                            >
-                                Annulla</button
-                            ><button type="submit" class="btn-save">
-                                Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="accountModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="accModalTitle">Nuovo Conto</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="accountForm">
-                        <input type="hidden" id="accId" />
-                        <div class="form-group">
-                            <label for="accName">Nome Conto</label
-                            ><input
-                                type="text"
-                                id="accName"
-                                required
-                                placeholder="Es. Conto Corrente"
-                            />
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="accIcon">Icona</label
-                                ><input
-                                    type="text"
-                                    id="accIcon"
-                                    placeholder="💳"
-                                    maxlength="2"
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label for="accColor">Colore</label
-                                ><input
-                                    type="color"
-                                    id="accColor"
-                                    value="#4f46e5"
-                                />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="accLogo">Logo URL (Opzionale)</label
-                            ><input
-                                type="url"
-                                id="accLogo"
-                                placeholder="https://..."
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="accBalance">Saldo iniziale</label
-                            ><input
-                                type="number"
-                                id="accBalance"
-                                step="0.01"
-                                value="0"
-                            />
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelAccBtn"
-                            >
-                                Annulla</button
-                            ><button type="submit" class="btn-save">
-                                Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="debtModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="debtModalTitle">Nuovo Debito/Credito</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="debtForm">
-                        <input type="hidden" id="debtId" />
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <div class="type-selector">
-                                <button
-                                    type="button"
-                                    class="type-btn active"
-                                    data-debttype="debt"
-                                >
-                                    Debito</button
-                                ><button
-                                    type="button"
-                                    class="type-btn"
-                                    data-debttype="credit"
-                                >
-                                    Credito
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="debtPerson">Persona</label
-                            ><input type="text" id="debtPerson" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="debtDescription">Descrizione</label
-                            ><input type="text" id="debtDescription" required />
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="debtTotal">Totale</label
-                                ><input
-                                    type="number"
-                                    id="debtTotal"
-                                    step="0.01"
-                                    min="0.01"
-                                    required
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label for="debtPaid">Già pagato</label
-                                ><input
-                                    type="number"
-                                    id="debtPaid"
-                                    step="0.01"
-                                    min="0"
-                                    value="0"
-                                />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="debtDate">Data</label
-                            ><input type="date" id="debtDate" required />
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelDebtBtn"
-                            >
-                                Annulla</button
-                            ><button type="submit" class="btn-save">
-                                Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="paymentModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Aggiungi Pagamento</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="paymentForm">
-                        <input type="hidden" id="paymentDebtId" />
-                        <div class="form-group">
-                            <label for="paymentAmount">Importo</label
-                            ><input
-                                type="number"
-                                id="paymentAmount"
-                                step="0.01"
-                                min="0.01"
-                                required
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="paymentDate">Data</label
-                            ><input type="date" id="paymentDate" required />
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelPaymentBtn"
-                            >
-                                Annulla</button
-                            ><button type="submit" class="btn-save">
-                                Aggiungi
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="profileModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="profileModalTitle">Nuovo Profilo</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="profileForm">
-                        <input type="hidden" id="profileId" />
-                        <div class="form-group">
-                            <label for="profileName">Nome Profilo</label
-                            ><input
-                                type="text"
-                                id="profileName"
-                                required
-                                placeholder="Es. Personale, Lavoro"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="profileColor">Colore</label
-                            ><input
-                                type="color"
-                                id="profileColor"
-                                value="#4f46e5"
-                            />
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelProfileBtn"
-                            >
-                                Annulla</button
-                            ><button type="submit" class="btn-save">
-                                Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="confirmPasswordModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="confirmModalTitle">Conferma</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <p
-                        id="confirmModalDesc"
-                        style="
-                            color: var(--text-muted);
-                            font-size: 14px;
-                            margin-bottom: 20px;
-                        "
-                    ></p>
-                    <form id="confirmPasswordForm">
-                        <div class="form-group">
-                            <label for="confirmPasswordInput"
-                                >Inserisci la tua password</label
-                            >
-                            <div class="password-wrapper">
-                                <input
-                                    type="password"
-                                    id="confirmPasswordInput"
-                                    required
-                                    placeholder="••••••••"
-                                />
-                                <button
-                                    type="button"
-                                    class="toggle-password"
-                                    data-target="confirmPasswordInput"
-                                >
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="confirmError" class="error-msg"></div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelConfirmBtn"
-                            >
-                                Annulla</button
-                            ><button
-                                type="submit"
-                                class="btn-save"
-                                id="confirmSubmitBtn"
-                                style="background: var(--expense)"
-                            >
-                                Conferma
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+                <div class="form-group"><label>Tipo</label><div class="type-selector"><button type="button" class="type-btn active" data-cattype="expense">Uscita</button><button type="button" class="type-btn" data-cattype="income">Entrata</button></div></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelCatBtn">Annulla</button><button type="submit" class="btn-save">Salva</button></div>
+            </form>
         </div>
+    </div>
 
-        <script src="script.js"></script>
-    </body>
+    <div class="modal" id="accountModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="accModalTitle">Nuovo Conto</h3><button class="close-modal">&times;</button></div>
+            <form id="accountForm">
+                <input type="hidden" id="accId">
+                <div class="form-group"><label for="accName">Nome Conto</label><input type="text" id="accName" required placeholder="Es. Conto Corrente"></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="accIcon">Icona</label><input type="text" id="accIcon" placeholder="💳" maxlength="2"></div>
+                    <div class="form-group"><label for="accColor">Colore</label><input type="color" id="accColor" value="#4f46e5"></div>
+                </div>
+                <div class="form-group"><label for="accLogo">Logo URL (Opzionale)</label><input type="url" id="accLogo" placeholder="https://..."></div>
+                <div class="form-group"><label for="accBalance">Saldo iniziale</label><input type="number" id="accBalance" step="0.01" value="0"></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelAccBtn">Annulla</button><button type="submit" class="btn-save">Salva</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="debtModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="debtModalTitle">Nuovo Debito/Credito</h3><button class="close-modal">&times;</button></div>
+            <form id="debtForm">
+                <input type="hidden" id="debtId">
+                <div class="form-group"><label>Tipo</label><div class="type-selector"><button type="button" class="type-btn active" data-debttype="debt">Debito</button><button type="button" class="type-btn" data-debttype="credit">Credito</button></div></div>
+                <div class="form-group"><label for="debtPerson">Persona</label><input type="text" id="debtPerson" required></div>
+                <div class="form-group"><label for="debtDescription">Descrizione</label><input type="text" id="debtDescription" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="debtTotal">Totale</label><input type="number" id="debtTotal" step="0.01" min="0.01" required></div>
+                    <div class="form-group"><label for="debtPaid">Già pagato</label><input type="number" id="debtPaid" step="0.01" min="0" value="0"></div>
+                </div>
+                <div class="form-group"><label for="debtDate">Data</label><input type="date" id="debtDate" required></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelDebtBtn">Annulla</button><button type="submit" class="btn-save">Salva</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="paymentModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3>Aggiungi Pagamento</h3><button class="close-modal">&times;</button></div>
+            <form id="paymentForm">
+                <input type="hidden" id="paymentDebtId">
+                <div class="form-group"><label for="paymentAmount">Importo</label><input type="number" id="paymentAmount" step="0.01" min="0.01" required></div>
+                <div class="form-group"><label for="paymentDate">Data</label><input type="date" id="paymentDate" required></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelPaymentBtn">Annulla</button><button type="submit" class="btn-save">Aggiungi</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="profileModalTitle">Nuovo Profilo</h3><button class="close-modal">&times;</button></div>
+            <form id="profileForm">
+                <input type="hidden" id="profileId">
+                <div class="form-group"><label for="profileName">Nome Profilo</label><input type="text" id="profileName" required placeholder="Es. Personale, Lavoro"></div>
+                <div class="form-group"><label for="profileColor">Colore</label><input type="color" id="profileColor" value="#4f46e5"></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelProfileBtn">Annulla</button><button type="submit" class="btn-save">Salva</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="confirmPasswordModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="confirmModalTitle">Conferma</h3><button class="close-modal">&times;</button></div>
+            <p id="confirmModalDesc" style="color:var(--text-muted);font-size:14px;margin-bottom:20px"></p>
+            <form id="confirmPasswordForm">
+                <div class="form-group">
+                    <label for="confirmPasswordInput">Inserisci la tua password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPasswordInput" required placeholder="••••••••">
+                        <button type="button" class="toggle-password" data-target="confirmPasswordInput"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div id="confirmError" class="error-msg"></div>
+                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelConfirmBtn">Annulla</button><button type="submit" class="btn-save" id="confirmSubmitBtn" style="background:var(--expense)">Conferma</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
 </html>

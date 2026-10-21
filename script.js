@@ -1,6 +1,3 @@
-// ============================================
-// CONFIGURAZIONE FIREBASE
-// ============================================
 const firebaseConfig = {
   apiKey: "AIzaSyD_tWdvjxOCFfbPADpGGzSfJ6MRz4O3rzM",
   authDomain: "gestione-spese-84.firebaseapp.com",
@@ -8,32 +5,26 @@ const firebaseConfig = {
   projectId: "gestione-spese-84",
   storageBucket: "gestione-spese-84.firebasestorage.app",
   messagingSenderId: "375465380274",
-  appId: "1:375465380274:web:e77fe88204c8a4fbe87cab",
+  appId: "1:375465380274:web:e77fe88204c8a4fbe87cab"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-// ============================================
-// COSTANTI
-// ============================================
 const DEFAULT_CATEGORIES = [
   { id: "cat1", name: "Alimentari", icon: "🛒", color: "#10b981", type: "expense" },
   { id: "cat2", name: "Trasporti", icon: "🚗", color: "#3b82f6", type: "expense" },
   { id: "cat3", name: "Bollette", icon: "💡", color: "#f59e0b", type: "expense" },
   { id: "cat4", name: "Svago", icon: "🎬", color: "#a855f7", type: "expense" },
   { id: "cat5", name: "Stipendio", icon: "💼", color: "#10b981", type: "income" },
-  { id: "cat6", name: "Altro", icon: "📦", color: "#64748b", type: "expense" },
+  { id: "cat6", name: "Altro", icon: "📦", color: "#64748b", type: "expense" }
 ];
 const DEFAULT_ACCOUNTS = [
   { id: "acc1", name: "Conto Corrente", icon: "", color: "#4f46e5", balance: 0 },
-  { id: "acc2", name: "Carta Visa", icon: "💳", color: "#0ea5e9", balance: 0 },
+  { id: "acc2", name: "Carta Visa", icon: "💳", color: "#0ea5e9", balance: 0 }
 ];
 const MONTHS_IT = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 
-// ============================================
-// STATO
-// ============================================
 let state = {
   currentUser: null,
   currentEmail: null,
@@ -47,12 +38,9 @@ let state = {
   currentViewId: null,
   data: null,
   dataRef: null,
-  listeners: [],
+  listeners: []
 };
 
-// ============================================
-// UTILS
-// ============================================
 const $ = (id) => document.getElementById(id);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const formatMoney = (n) => "€ " + (n || 0).toFixed(2).replace(".", ",");
@@ -62,9 +50,6 @@ const getAccount = (id) => state.data?.accounts.find((a) => a.id === id) || { na
 const arrayToObject = (arr) => { const obj = {}; arr.forEach((item) => { obj[item.id] = item; }); return obj; };
 const objectToArray = (obj) => { if (!obj) return []; return Object.keys(obj).map((key) => ({ id: key, ...obj[key] })); };
 
-// ============================================
-// TEMA
-// ============================================
 function initTheme() {
   const saved = localStorage.getItem("abt_theme") || "light";
   applyTheme(saved);
@@ -83,9 +68,6 @@ $("themeBtnSidebar").addEventListener("click", () => {
 });
 $("themeToggle").addEventListener("change", (e) => applyTheme(e.target.checked ? "dark" : "light"));
 
-// ============================================
-// NAVIGAZIONE
-// ============================================
 const sidebar = document.querySelector(".sidebar");
 const sidebarOverlay = $("sidebarOverlay");
 function navigateTo(section) {
@@ -105,9 +87,6 @@ document.querySelectorAll(".link-btn[data-goto]").forEach((btn) => btn.addEventL
 $("menuToggle").addEventListener("click", () => { sidebar.classList.toggle("open"); sidebarOverlay.classList.toggle("active"); });
 sidebarOverlay.addEventListener("click", () => { sidebar.classList.remove("open"); sidebarOverlay.classList.remove("active"); });
 
-// ============================================
-// AUTH & LOGIN
-// ============================================
 let authMode = "login";
 $("authSwitchBtn").addEventListener("click", () => {
   authMode = authMode === "login" ? "register" : "login";
@@ -154,7 +133,7 @@ function translateAuthError(code) {
     "auth/email-already-in-use": "Email già registrata",
     "auth/weak-password": "Password troppo debole (min. 6 caratteri)",
     "auth/invalid-credential": "Credenziali non valide",
-    "auth/too-many-requests": "Troppi tentativi",
+    "auth/too-many-requests": "Troppi tentativi"
   };
   return errors[code] || "Errore: " + code;
 }
@@ -188,7 +167,6 @@ auth.onAuthStateChanged(async (user) => {
     $("authScreen").classList.add("hidden");
     $("settingsEmail").textContent = user.email;
     $("dropdownEmail").textContent = user.email;
-    $("userAvatar").textContent = (user.displayName || user.email).charAt(0).toUpperCase();
     await loadProfiles(user.uid);
   } else {
     if (state.isOffline) return;
@@ -201,34 +179,28 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// ============================================
-// PROFILI
-// ============================================
 async function loadProfiles(uid) {
   try {
     const snapshot = await db.ref("users/" + uid + "/profiles").once("value");
     const profilesData = snapshot.val() || {};
     state.profiles = profilesData;
-
     if (Object.keys(profilesData).length === 0) {
       const defaultProfileId = genId();
       await db.ref("users/" + uid + "/profiles/" + defaultProfileId).set({
         name: "Personale",
         color: "#4f46e5",
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
       });
       state.profiles = { [defaultProfileId]: { name: "Personale", color: "#4f46e5" } };
     }
-
     const savedProfileId = localStorage.getItem("abt_currentProfile_" + uid);
     const profileIds = Object.keys(state.profiles);
     state.currentProfileId = savedProfileId && state.profiles[savedProfileId] ? savedProfileId : profileIds[0];
     localStorage.setItem("abt_currentProfile_" + uid, state.currentProfileId);
-
     subscribeProfileData(uid, state.currentProfileId);
     updateProfileUI();
   } catch (err) {
-    console.error("Errore caricamento profili: ", err);
+    console.error("Errore caricamento profili:", err);
   }
 }
 
@@ -237,13 +209,13 @@ function subscribeProfileData(uid, profileId) {
   state.dataRef = db.ref("users/" + uid + "/profiles/" + profileId);
   const listener = state.dataRef.on("value", (snapshot) => {
     const raw = snapshot.val();
-    if (!raw || !raw.categories) {
+    if (!raw) {
       state.dataRef.set({
         movements: {},
         categories: arrayToObject(DEFAULT_CATEGORIES),
         accounts: arrayToObject(DEFAULT_ACCOUNTS),
         debts: {},
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
       });
       return;
     }
@@ -251,7 +223,7 @@ function subscribeProfileData(uid, profileId) {
       movements: objectToArray(raw.movements),
       categories: objectToArray(raw.categories),
       accounts: objectToArray(raw.accounts),
-      debts: objectToArray(raw.debts),
+      debts: objectToArray(raw.debts)
     };
     refreshCurrent();
   });
@@ -333,7 +305,6 @@ $("addProfileBtn2").addEventListener("click", () => {
   $("profileModal").classList.add("active");
 });
 
-// CORREZIONE PRINCIPALE: Logica di salvataggio profilo online ripristinata
 $("profileForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const profileId = $("profileId").value || genId();
@@ -352,15 +323,13 @@ $("profileForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  // ONLINE: Salva o aggiorna il profilo nel database
   await db.ref("users/" + state.currentUser + "/profiles/" + profileId).update({
-    name, color, updatedAt: firebase.database.ServerValue.TIMESTAMP,
+    name, color, updatedAt: firebase.database.ServerValue.TIMESTAMP
   });
 
-  // Se è un nuovo profilo, inizializza la sua struttura dati
   if (!$("profileId").value) {
     await db.ref("users/" + state.currentUser + "/profiles/" + profileId).update({
-      movements: {}, categories: arrayToObject(DEFAULT_CATEGORIES), accounts: arrayToObject(DEFAULT_ACCOUNTS), debts: {},
+      movements: {}, categories: arrayToObject(DEFAULT_CATEGORIES), accounts: arrayToObject(DEFAULT_ACCOUNTS), debts: {}
     });
   }
 
@@ -373,17 +342,11 @@ $("cancelProfileBtn").addEventListener("click", () => $("profileModal").classLis
 $("userBtn").addEventListener("click", (e) => { e.stopPropagation(); $("userDropdown").classList.toggle("active"); });
 document.addEventListener("click", () => $("userDropdown").classList.remove("active"));
 
-// ============================================
-// SALVATAGGIO DATI
-// ============================================
 async function saveMovements() { if (!state.dataRef) return; const obj = {}; state.data.movements.forEach((m) => { obj[m.id] = m; }); await state.dataRef.child("movements").set(obj); }
 async function saveCategories() { if (!state.dataRef) return; const obj = {}; state.data.categories.forEach((c) => { obj[c.id] = c; }); await state.dataRef.child("categories").set(obj); }
 async function saveAccounts() { if (!state.dataRef) return; const obj = {}; state.data.accounts.forEach((a) => { obj[a.id] = a; }); await state.dataRef.child("accounts").set(obj); }
 async function saveDebts() { if (!state.dataRef) return; const obj = {}; state.data.debts.forEach((d) => { obj[d.id] = d; }); await state.dataRef.child("debts").set(obj); }
 
-// ============================================
-// MODALITÀ OFFLINE
-// ============================================
 const hostname = window.location.hostname;
 const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "" || hostname.startsWith("192.168.") || hostname.endsWith(".local");
 
@@ -454,6 +417,7 @@ window.deleteProfile = async (profileId) => {
   return _origDeleteProfile(profileId);
 };
 
+let pendingAction = null;
 $("clearAllDataBtn").addEventListener("click", () => {
   if (state.isOffline) {
     if (!confirm("Eliminare tutti i dati di questo profilo offline?")) return;
@@ -496,9 +460,6 @@ $("confirmPasswordForm").addEventListener("submit", async (e) => {
 });
 $("cancelConfirmBtn").addEventListener("click", () => $("confirmPasswordModal").classList.remove("active"));
 
-// ============================================
-// IMPORT/EXPORT
-// ============================================
 $("exportBtn").addEventListener("click", () => {
   if (!state.data) return;
   const data = { email: state.currentEmail, uid: state.currentUser, profileId: state.currentProfileId, profileName: state.profiles[state.currentProfileId]?.name, exportedAt: new Date().toISOString(), movements: state.data.movements, categories: state.data.categories, accounts: state.data.accounts, debts: state.data.debts };
@@ -521,9 +482,6 @@ $("importFile").addEventListener("change", async (e) => {
   reader.readAsText(file); e.target.value = "";
 });
 
-// ============================================
-// DASHBOARD & MOVIMENTI
-// ============================================
 function renderDashboard() {
   if (!state.data) { $("dashMovementsList").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Caricamento...</p></div>'; return; }
   const now = new Date();
@@ -567,9 +525,6 @@ $("filterType").addEventListener("change", renderMovements);
 $("filterMonth").addEventListener("change", renderMovements);
 $("filterYear").addEventListener("change", renderMovements);
 
-// ============================================
-// CATEGORIE, CONTI, DEBITI
-// ============================================
 function renderCategories() {
   if (!state.data) return;
   renderCategoryGrid("incomeCategoriesGrid", state.data.categories.filter((c) => c.type === "income"));
@@ -609,7 +564,7 @@ function renderDebts() {
   $("dashNet").textContent = (net >= 0 ? "+" : "") + formatMoney(net);
   $("dashDebtsCount").textContent = `${debts.filter((d) => d.paidAmount < d.totalAmount).length} debiti aperti`;
   $("dashCreditsCount").textContent = `${credits.filter((d) => d.paidAmount < d.totalAmount).length} crediti aperti`;
-  $("dashNetLabel").textContent = net >= 0 ? "Sei in attivo ✓" : "Sei in passivo ⚠";
+  $("dashNetLabel").textContent = net >= 0 ? "Sei in attivo ✓" : "Sei in passivo ";
   $("dashNet").style.color = net >= 0 ? "var(--income)" : "var(--expense)";
   const list = $("debtsList");
   if (state.data.debts.length === 0) { list.innerHTML = '<div class="empty-state"><i class="fas fa-hand-holding-usd"></i><p>Nessun debito/credito</p></div>'; return; }
@@ -645,9 +600,6 @@ $("debtForm").addEventListener("submit", async (e) => {
   await saveDebts(); $("debtModal").classList.remove("active");
 });
 
-// ============================================
-// MODAL MOVIMENTO
-// ============================================
 function populateCategorySelect() { const sel = $("mvCategory"); sel.innerHTML = state.data.categories.filter((c) => c.type === state.currentType).map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join("") || '<option value="">Nessuna</option>'; }
 function populateAccountSelect() { const sel = $("mvAccount"); sel.innerHTML = state.data.accounts.length ? state.data.accounts.map((a) => `<option value="${a.id}">${a.icon} ${a.name}</option>`).join("") : '<option value="">Nessun conto</option>'; }
 
@@ -687,9 +639,6 @@ function openViewModal(id) {
 $("editFromViewBtn").addEventListener("click", () => { $("viewModal").classList.remove("active"); setTimeout(() => openMovementModal(state.currentViewId), 200); });
 $("deleteFromViewBtn").addEventListener("click", async () => { if (confirm("Eliminare?")) { state.data.movements = state.data.movements.filter((m) => m.id !== state.currentViewId); await saveMovements(); $("viewModal").classList.remove("active"); } });
 
-// ============================================
-// MODAL CATEGORIA & CONTO
-// ============================================
 function openCategoryModal(id = null, defaultType = "expense") {
   if (id) {
     const c = state.data.categories.find((x) => x.id === id); if (!c) return;
@@ -730,9 +679,6 @@ $("accountForm").addEventListener("submit", async (e) => {
   await saveAccounts(); $("accountModal").classList.remove("active");
 });
 
-// ============================================
-// PASSWORD TOGGLE
-// ============================================
 document.querySelectorAll(".toggle-password").forEach((btn) => {
   btn.addEventListener("click", () => {
     const input = document.getElementById(btn.dataset.target);
@@ -742,9 +688,6 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
   });
 });
 
-// ============================================
-// CHIUSURA MODAL & FAB
-// ============================================
 function closeAllModals() { document.querySelectorAll(".modal").forEach((m) => m.classList.remove("active")); }
 document.querySelectorAll(".close-modal, .modal-overlay").forEach((el) => el.addEventListener("click", closeAllModals));
 ["cancelMvBtn", "closeViewBtn", "cancelCatBtn", "cancelAccBtn", "cancelDebtBtn", "cancelPaymentBtn"].forEach((id) => $(id).addEventListener("click", closeAllModals));
@@ -768,5 +711,4 @@ function refreshCurrent() {
   else if (state.currentSection === "debts") renderDebts();
 }
 
-// INIT
 initTheme();
