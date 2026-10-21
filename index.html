@@ -1,1320 +1,938 @@
 <!doctype html>
 <html lang="it">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <title>Gestione Spese</title>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#4f46e5" />
+        <title>AB Tracker</title>
+        <link rel="icon" type="image/png" href="favicon.png" />
+        <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+        <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+        <link rel="stylesheet" href="style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+    </head>
+    <body>
+        <div class="app">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="logo"><span class="logo-ab">AB TRACKER</span></div>
 
-    <!-- Tailwind CSS & FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <div class="theme-toggle-sidebar">
+                    <button
+                        class="theme-btn"
+                        id="themeBtnSidebar"
+                        title="Cambia tema"
+                    >
+                        <i class="fas fa-moon" id="themeIconSidebar"></i>
+                        <span id="themeLabelSidebar">Dark Mode</span>
+                    </button>
+                </div>
 
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              primary: "#3b82f6",
-              income: "#10b981",
-              expense: "#ef4444",
-            },
-          },
-        },
-      };
-    </script>
-  </head>
-  <body
-    class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen pb-24 font-sans select-none"
-  >
-    <!-- HEADER -->
-    <header
-      class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-sm"
-    >
-      <div class="flex items-center gap-3">
-        <button
-          id="open-menu-btn"
-          class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl"
-        >
-          <i class="fa-solid fa-bars text-lg"></i>
-        </button>
-        <h1 class="font-extrabold text-lg tracking-tight">Gestione Spese</h1>
-      </div>
+                <nav class="sidebar-nav">
+                    <button class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-chart-pie"></i> Dashboard
+                    </button>
+                    <button class="nav-link" data-section="movements">
+                        <i class="fas fa-exchange-alt"></i> Movimenti
+                    </button>
+                    <button class="nav-link" data-section="categories">
+                        <i class="fas fa-tags"></i> Categorie
+                    </button>
+                    <button class="nav-link" data-section="accounts">
+                        <i class="fas fa-wallet"></i> Conti
+                    </button>
+                    <button class="nav-link" data-section="debts">
+                        <i class="fas fa-hand-holding-usd"></i> Debiti & Crediti
+                    </button>
+                    <button class="nav-link" data-section="settings">
+                        <i class="fas fa-cog"></i> Impostazioni
+                    </button>
+                </nav>
+                <div class="sidebar-footer">
+                    <span class="version">v3.0</span>
+                </div>
+            </aside>
 
-      <!-- Selettore Utente con Indicatore Colore -->
-      <div
-        class="flex items-center gap-2 bg-gray-100 dark:bg-slate-700 py-1.5 px-3 rounded-xl"
-      >
-        <div
-          id="user-badge-color"
-          class="w-3.5 h-3.5 rounded-full border border-black/10 transition-colors"
-        ></div>
-        <select
-          id="user-selector"
-          class="bg-transparent text-xs font-bold border-none outline-none cursor-pointer"
-        >
-          <!-- Generato dinamicamente -->
-        </select>
-      </div>
-    </header>
+            <!-- Main -->
+            <main class="main">
+                <header class="topbar">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                    <div class="user-selector">
+                        <button class="user-btn" id="userBtn">
+                            <span class="user-avatar" id="userAvatar">?</span>
+                            <span class="user-name" id="userName"
+                                >Nessun utente</span
+                            >
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown"></div>
+                    </div>
+                    <button class="fab-add" id="fabAdd">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </header>
 
-    <!-- DRAWER / MENU LATERALE -->
-    <div
-      id="drawer-overlay"
-      class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity"
-    ></div>
-    <aside
-      id="drawer"
-      class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-slate-800 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between p-5 shadow-2xl"
-    >
-      <div class="space-y-6">
-        <div
-          class="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-slate-700"
-        >
-          <div>
-            <h2 class="font-bold text-base">Menu</h2>
-            <p
-              id="drawer-current-user"
-              class="text-xs text-gray-400 font-semibold"
-            >
-              Nessun utente
-            </p>
-          </div>
-          <button
-            id="close-menu-btn"
-            class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
-          >
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
-        </div>
+                <div class="content">
+                    <!-- DASHBOARD -->
+                    <section class="section active" id="section-dashboard">
+                        <div class="month-badge" id="dashMonthBadge">
+                            Mese corrente
+                        </div>
+                        <div class="summary-grid">
+                            <div class="summary-card income">
+                                <div class="sc-header">
+                                    <i class="fas fa-arrow-down"></i
+                                    ><span class="sc-label"
+                                        >Entrate del mese</span
+                                    >
+                                </div>
+                                <div class="sc-amount" id="dashIncome">
+                                    € 0,00
+                                </div>
+                            </div>
+                            <div class="summary-card expense">
+                                <div class="sc-header">
+                                    <i class="fas fa-arrow-up"></i
+                                    ><span class="sc-label"
+                                        >Uscite del mese</span
+                                    >
+                                </div>
+                                <div class="sc-amount" id="dashExpense">
+                                    € 0,00
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2>Ultimi Movimenti (mese attuale)</h2>
+                                <button class="link-btn" data-goto="movements">
+                                    Vedi tutti →
+                                </button>
+                            </div>
+                            <div
+                                class="movements-list"
+                                id="dashMovementsList"
+                            ></div>
+                        </div>
+                    </section>
 
-        <nav id="nav-container" class="space-y-1">
-          <a
-            href="#"
-            data-page="dashboard"
-            class="nav-item flex items-center gap-3 p-3 rounded-2xl bg-primary/10 text-primary font-bold text-sm"
-          >
-            <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
-          </a>
-          <a
-            href="#"
-            data-page="transactions"
-            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
-          >
-            <i class="fa-solid fa-receipt w-5"></i> Movimenti
-          </a>
-          <a
-            href="#"
-            data-page="categories"
-            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
-          >
-            <i class="fa-solid fa-tags w-5"></i> Categorie
-          </a>
-          <a
-            href="#"
-            data-page="accounts"
-            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
-          >
-            <i class="fa-solid fa-wallet w-5"></i> Conti & Carte
-          </a>
-          <a
-            href="#"
-            data-page="debts"
-            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
-          >
-            <i class="fa-solid fa-hand-holding-dollar w-5"></i> Debiti & Crediti
-          </a>
-          <a
-            href="#"
-            data-page="settings"
-            class="nav-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 font-semibold text-sm text-gray-600 dark:text-gray-300"
-          >
-            <i class="fa-solid fa-gear w-5"></i> Impostazioni
-          </a>
-        </nav>
-      </div>
+                    <!-- MOVIMENTI -->
+                    <section class="section" id="section-movements">
+                        <div class="summary-grid">
+                            <div class="summary-card income">
+                                <div class="sc-header">
+                                    <i class="fas fa-arrow-down"></i
+                                    ><span class="sc-label"
+                                        >Entrate totali</span
+                                    >
+                                </div>
+                                <div class="sc-amount" id="movIncome">
+                                    € 0,00
+                                </div>
+                            </div>
+                            <div class="summary-card expense">
+                                <div class="sc-header">
+                                    <i class="fas fa-arrow-up"></i
+                                    ><span class="sc-label">Uscite totali</span>
+                                </div>
+                                <div class="sc-amount" id="movExpense">
+                                    € 0,00
+                                </div>
+                            </div>
+                        </div>
+                        <div class="toolbar">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="Cerca movimenti..."
+                                />
+                            </div>
+                            <select id="filterType" class="filter-select">
+                                <option value="all">Tutti i tipi</option>
+                                <option value="income">Entrate</option>
+                                <option value="expense">Uscite</option>
+                            </select>
+                            <select id="filterMonth" class="filter-select">
+                                <option value="all">Tutti i mesi</option>
+                            </select>
+                            <select id="filterYear" class="filter-select">
+                                <option value="all">Tutti gli anni</option>
+                            </select>
+                        </div>
+                        <div class="movements-list" id="movementsList"></div>
+                    </section>
 
-      <div
-        class="text-xs text-center text-gray-400 font-semibold pt-4 border-t border-gray-100 dark:border-slate-700"
-      >
-        v2.0 • Realtime Firebase
-      </div>
-    </aside>
+                    <!-- CATEGORIE -->
+                    <section class="section" id="section-categories">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2 style="color: var(--income)">
+                                    <i
+                                        class="fas fa-arrow-down"
+                                        style="margin-right: 8px"
+                                    ></i
+                                    >Categorie Entrata
+                                </h2>
+                                <button
+                                    class="btn-primary"
+                                    id="addIncomeCategoryBtn"
+                                >
+                                    <i class="fas fa-plus"></i> Nuova
+                                </button>
+                            </div>
+                            <div
+                                class="categories-grid"
+                                id="incomeCategoriesGrid"
+                            ></div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2 style="color: var(--expense)">
+                                    <i
+                                        class="fas fa-arrow-up"
+                                        style="margin-right: 8px"
+                                    ></i
+                                    >Categorie Uscita
+                                </h2>
+                                <button
+                                    class="btn-primary"
+                                    id="addExpenseCategoryBtn"
+                                >
+                                    <i class="fas fa-plus"></i> Nuova
+                                </button>
+                            </div>
+                            <div
+                                class="categories-grid"
+                                id="expenseCategoriesGrid"
+                            ></div>
+                        </div>
+                    </section>
 
-    <!-- CONTENUTO PRINCIPALE -->
-    <main class="max-w-md mx-auto p-4 space-y-6">
-      <!-- AVVISO NESSUN UTENTE -->
-      <div
-        id="no-user-banner"
-        class="hidden p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-700 dark:text-amber-400 text-xs font-semibold text-center space-y-2"
-      >
-        <p>
-          <i class="fa-solid fa-triangle-exclamation mr-1"></i> Nessun utente
-          creato.
-        </p>
-        <p>
-          Vai nella sezione <strong>Impostazioni</strong> per creare il tuo
-          primo profilo utente.
-        </p>
-      </div>
+                    <!-- CONTI -->
+                    <section class="section" id="section-accounts">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2>Conti & Carte</h2>
+                                <button class="btn-primary" id="addAccountBtn">
+                                    <i class="fas fa-plus"></i> Nuovo
+                                </button>
+                            </div>
+                            <div class="accounts-grid" id="accountsGrid"></div>
+                        </div>
+                    </section>
 
-      <!-- SEZIONE: DASHBOARD -->
-      <section id="page-dashboard" class="space-y-6">
-        <!-- CARD SALDO TOTALE -->
-        <div
-          class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-4"
-        >
-          <div class="flex justify-between items-center">
-            <span
-              class="text-xs font-bold uppercase tracking-wider text-gray-400"
-              >Saldo Totale</span
-            >
-            <span id="summary-total" class="font-bold text-lg text-income"
-              >0.00 €</span
-            >
-          </div>
+                    <!-- DEBITI & CREDITI -->
+                    <section class="section" id="section-debts">
+                        <div class="summary-grid debts-summary">
+                            <div class="summary-card debt">
+                                <div class="sc-header">
+                                    <i class="fas fa-hand-holding-usd"></i
+                                    ><span class="sc-label">Debiti Totali</span>
+                                </div>
+                                <div class="sc-amount" id="dashDebts">
+                                    € 0,00
+                                </div>
+                                <div class="sc-sublabel" id="dashDebtsCount">
+                                    0 debiti aperti
+                                </div>
+                            </div>
+                            <div class="summary-card credit">
+                                <div class="sc-header">
+                                    <i class="fas fa-hand-holding-heart"></i
+                                    ><span class="sc-label"
+                                        >Crediti Totali</span
+                                    >
+                                </div>
+                                <div class="sc-amount" id="dashCredits">
+                                    € 0,00
+                                </div>
+                                <div class="sc-sublabel" id="dashCreditsCount">
+                                    0 crediti aperti
+                                </div>
+                            </div>
+                            <div class="summary-card net">
+                                <div class="sc-header">
+                                    <i class="fas fa-balance-scale"></i
+                                    ><span class="sc-label">Saldo Netto</span>
+                                </div>
+                                <div class="sc-amount" id="dashNet">€ 0,00</div>
+                                <div class="sc-sublabel" id="dashNetLabel">
+                                    Crediti − Debiti
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2>Lista Debiti & Crediti</h2>
+                                <button class="btn-primary" id="addDebtBtn">
+                                    <i class="fas fa-plus"></i> Nuovo
+                                </button>
+                            </div>
+                            <div class="debts-list" id="debtsList"></div>
+                        </div>
+                    </section>
 
-          <!-- GRAFICO DOUGHNUT -->
-          <div class="relative h-44 flex items-center justify-center">
-            <canvas id="balanceChart"></canvas>
-          </div>
+                    <!-- IMPOSTAZIONI -->
+                    <section class="section" id="section-settings">
+                        <div class="panel">
+                            <div class="panel-header"><h2>Aspetto</h2></div>
+                            <div class="settings-row">
+                                <div>
+                                    <div class="settings-title">Tema scuro</div>
+                                    <div class="settings-desc">
+                                        Attiva la dark mode
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="themeToggle" />
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
 
-          <!-- ENTRATE / USCITE RECAP -->
-          <div
-            class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-50 dark:border-slate-700/50"
-          >
-            <div class="p-3 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl">
-              <span
-                class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase"
-                >Entrate</span
-              >
-              <p
-                id="summary-income"
-                class="font-extrabold text-sm text-emerald-600 dark:text-emerald-400"
-              >
-                0.00 €
-              </p>
+                        <div class="panel">
+                            <div class="panel-header"><h2>Sicurezza</h2></div>
+                            <div class="settings-row">
+                                <div>
+                                    <div class="settings-title">
+                                        Password profilo
+                                    </div>
+                                    <div
+                                        class="settings-desc"
+                                        id="passwordStatus"
+                                    >
+                                        Nessuna password impostata
+                                    </div>
+                                </div>
+                                <button
+                                    class="btn-primary"
+                                    id="managePasswordBtn"
+                                >
+                                    <i class="fas fa-key"></i> Gestisci
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header"><h2>Dati</h2></div>
+                            <div class="settings-actions">
+                                <button class="btn-action" id="exportBtn">
+                                    <i class="fas fa-download"></i> Esporta dati
+                                </button>
+                                <button class="btn-action" id="importBtn">
+                                    <i class="fas fa-upload"></i> Importa dati
+                                </button>
+                                <input
+                                    type="file"
+                                    id="importFile"
+                                    accept=".json"
+                                    style="display: none"
+                                />
+                                <button
+                                    class="btn-action danger"
+                                    id="clearAllBtn"
+                                >
+                                    <i class="fas fa-trash-alt"></i> Elimina
+                                    tutti i dati
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2>Gestione Utenti</h2>
+                                <button class="btn-primary" id="addUserBtn">
+                                    <i class="fas fa-plus"></i> Nuovo Utente
+                                </button>
+                            </div>
+                            <div class="users-list" id="usersList"></div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <!-- Bottom Nav mobile -->
+            <nav class="bottom-nav">
+                <button class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-chart-pie"></i><span>Home</span>
+                </button>
+                <button class="nav-link" data-section="movements">
+                    <i class="fas fa-exchange-alt"></i><span>Movimenti</span>
+                </button>
+                <button class="nav-link" data-section="debts">
+                    <i class="fas fa-hand-holding-usd"></i><span>Debiti</span>
+                </button>
+                <button class="nav-link" data-section="settings">
+                    <i class="fas fa-cog"></i><span>Impost.</span>
+                </button>
+            </nav>
+
+            <!-- MODAL: Movimento -->
+            <div class="modal" id="movementModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="mvModalTitle">Nuovo Movimento</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="movementForm">
+                        <input type="hidden" id="mvId" />
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <div class="type-selector">
+                                <button
+                                    type="button"
+                                    class="type-btn active"
+                                    data-type="income"
+                                >
+                                    <i class="fas fa-arrow-down"></i> Entrata
+                                </button>
+                                <button
+                                    type="button"
+                                    class="type-btn"
+                                    data-type="expense"
+                                >
+                                    <i class="fas fa-arrow-up"></i> Uscita
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mvAmount">Importo (€)</label
+                                ><input
+                                    type="number"
+                                    id="mvAmount"
+                                    step="0.01"
+                                    min="0.01"
+                                    required
+                                    placeholder="0,00"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="mvDate">Data</label
+                                ><input type="date" id="mvDate" required />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="mvDescription">Descrizione</label
+                            ><input
+                                type="text"
+                                id="mvDescription"
+                                required
+                                placeholder="Es. Spesa supermercato"
+                            />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mvCategory">Categoria</label
+                                ><select id="mvCategory" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="mvAccount">Conto</label
+                                ><select id="mvAccount"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="mvNotes">Note (Opzionale)</label
+                            ><textarea
+                                id="mvNotes"
+                                rows="2"
+                                placeholder="Dettagli aggiuntivi..."
+                            ></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelMvBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="p-3 bg-rose-50 dark:bg-rose-900/10 rounded-2xl">
-              <span
-                class="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase"
-                >Uscite</span
-              >
-              <p
-                id="summary-expense"
-                class="font-extrabold text-sm text-rose-600 dark:text-rose-400"
-              >
-                0.00 €
-              </p>
+
+            <!-- MODAL: Dettaglio Movimento -->
+            <div class="modal" id="viewModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Dettaglio Movimento</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="view-content" id="viewContent"></div>
+                    <div class="modal-actions">
+                        <button
+                            type="button"
+                            class="btn-cancel"
+                            id="closeViewBtn"
+                        >
+                            Chiudi
+                        </button>
+                        <button
+                            type="button"
+                            class="btn-edit"
+                            id="editFromViewBtn"
+                        >
+                            <i class="fas fa-pen"></i> Modifica
+                        </button>
+                        <button
+                            type="button"
+                            class="btn-delete"
+                            id="deleteFromViewBtn"
+                        >
+                            <i class="fas fa-trash"></i> Elimina
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <!-- ULTIMI MOVIMENTI -->
-        <div class="space-y-3">
-          <div class="flex justify-between items-center px-1">
-            <h3 class="font-bold text-sm">Ultimi Movimenti</h3>
-          </div>
-          <div id="transactions-list" class="space-y-2">
-            <!-- Popolato dinamicamente -->
-          </div>
-        </div>
-      </section>
-
-      <!-- SEZIONE: MOVIMENTI -->
-      <section id="page-transactions" class="hidden space-y-4">
-        <h2 class="font-extrabold text-lg">Tutti i Movimenti</h2>
-        <div id="transactions-full-list" class="space-y-2">
-          <!-- Popolato dinamicamente -->
-        </div>
-      </section>
-
-      <!-- SEZIONE: CATEGORIE -->
-      <section id="page-categories" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <h2 class="font-extrabold text-lg">Categorie</h2>
-          <button
-            id="add-category-btn"
-            class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm"
-          >
-            <i class="fa-solid fa-plus"></i> Nuova
-          </button>
-        </div>
-        <div id="categories-list" class="grid grid-cols-2 gap-3">
-          <!-- Popolato dinamicamente -->
-        </div>
-      </section>
-
-      <!-- SEZIONE: CONTI & CARTE -->
-      <section id="page-accounts" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <h2 class="font-extrabold text-lg">Conti & Carte</h2>
-          <button
-            id="add-account-btn"
-            class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm"
-          >
-            <i class="fa-solid fa-plus"></i> Nuovo Conto
-          </button>
-        </div>
-        <div id="accounts-list" class="space-y-2">
-          <!-- Popolato dinamicamente -->
-        </div>
-      </section>
-
-      <!-- SEZIONE: DEBITI & CREDITI -->
-      <section id="page-debts" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <h2 class="font-extrabold text-lg">Debiti & Crediti</h2>
-          <button
-            id="add-debt-btn"
-            class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm"
-          >
-            <i class="fa-solid fa-plus"></i> Nuovo
-          </button>
-        </div>
-        <div id="debts-list" class="space-y-3">
-          <!-- Popolato dinamicamente -->
-        </div>
-      </section>
-
-      <!-- SEZIONE: IMPOSTAZIONI -->
-      <section id="page-settings" class="hidden space-y-6">
-        <h2 class="font-extrabold text-lg">Impostazioni</h2>
-
-        <!-- GESTIONE UTENTI -->
-        <div
-          class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-4"
-        >
-          <h3 class="font-bold text-sm">Gestione Utenti</h3>
-
-          <!-- Form Creazione Nuovo Utente con Selettore Colore -->
-          <div
-            class="space-y-3 p-3 bg-gray-50 dark:bg-slate-700/40 rounded-2xl"
-          >
-            <label class="text-xs text-gray-400 font-semibold block"
-              >Nuovo Utente</label
-            >
-            <div class="flex items-center gap-2">
-              <input
-                type="text"
-                id="new-user-input"
-                placeholder="Nome utente"
-                class="flex-1 p-3 bg-white dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-              />
-              <input
-                type="color"
-                id="new-user-color-input"
-                value="#3b82f6"
-                title="Scegli il colore del profilo"
-                class="w-11 h-11 rounded-xl cursor-pointer bg-transparent border-none"
-              />
-              <button
-                id="add-user-btn"
-                class="bg-primary text-white font-bold text-xs px-4 h-11 rounded-xl flex items-center gap-1 shadow-sm"
-              >
-                <i class="fa-solid fa-plus"></i> Crea
-              </button>
+            <!-- MODAL: Categoria -->
+            <div class="modal" id="categoryModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="catModalTitle">Nuova Categoria</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="categoryForm">
+                        <input type="hidden" id="catId" />
+                        <div class="form-group">
+                            <label for="catName">Nome Categoria</label
+                            ><input
+                                type="text"
+                                id="catName"
+                                required
+                                placeholder="Es. Alimentari"
+                            />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="catIcon">Icona (emoji)</label
+                                ><input
+                                    type="text"
+                                    id="catIcon"
+                                    required
+                                    placeholder=""
+                                    maxlength="2"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="catColor">Colore</label
+                                ><input
+                                    type="color"
+                                    id="catColor"
+                                    value="#4f46e5"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <div class="type-selector">
+                                <button
+                                    type="button"
+                                    class="type-btn active"
+                                    data-cattype="expense"
+                                >
+                                    Uscita
+                                </button>
+                                <button
+                                    type="button"
+                                    class="type-btn"
+                                    data-cattype="income"
+                                >
+                                    Entrata
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelCatBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-          </div>
 
-          <div id="users-manager-list" class="space-y-2 pt-2">
-            <!-- Popolato dinamicamente -->
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- FAB / BOTTONE FLOTTANTE AZIONI -->
-    <div class="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
-      <div
-        id="fab-options"
-        class="flex flex-col items-end gap-2 opacity-0 pointer-events-none transition-all duration-200"
-      >
-        <button
-          id="btn-add-income"
-          class="flex items-center gap-2 bg-emerald-500 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-lg hover:scale-105 transition-transform"
-        >
-          <i class="fa-solid fa-arrow-down"></i> Entrata
-        </button>
-        <button
-          id="btn-add-expense"
-          class="flex items-center gap-2 bg-rose-500 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-lg hover:scale-105 transition-transform"
-        >
-          <i class="fa-solid fa-arrow-up"></i> Uscita
-        </button>
-      </div>
-      <button
-        id="fab-main"
-        class="w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center text-xl font-bold hover:scale-105 transition-transform"
-      >
-        <i class="fa-solid fa-plus"></i>
-      </button>
-    </div>
-
-    <!-- MODALI / POPUP MODIFICHE E CREAZIONI -->
-
-    <!-- MODALE TRANSAZIONE -->
-    <div
-      id="transaction-modal"
-      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center">
-          <h3 id="modal-title" class="text-lg font-bold">Nuova Transazione</h3>
-          <button id="close-modal-btn" class="text-gray-400 p-1">
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
-        </div>
-        <form id="transaction-form" class="space-y-3">
-          <input type="hidden" id="tx-type" value="expense" />
-          <div>
-            <label class="text-xs text-gray-400 block mb-1">Importo (€)</label>
-            <input
-              type="number"
-              step="0.01"
-              id="tx-amount"
-              required
-              placeholder="0.00"
-              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-lg font-bold border-none focus:ring-2 focus:ring-primary outline-none"
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1"
-              >Destinatario / Mittente</label
-            >
-            <input
-              type="text"
-              id="tx-party"
-              placeholder="Es. Supermercato, Stipendio"
-              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1">Categoria</label>
-            <div
-              id="modal-category-grid"
-              class="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto p-1"
-            >
-              <!-- Popolato dinamicamente -->
+            <!-- MODAL: Conto -->
+            <div class="modal" id="accountModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="accModalTitle">Nuovo Conto / Carta</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="accountForm">
+                        <input type="hidden" id="accId" />
+                        <div class="form-group">
+                            <label for="accName">Nome Conto o Carta</label
+                            ><input
+                                type="text"
+                                id="accName"
+                                required
+                                placeholder="Es. Conto Corrente"
+                            />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="accIcon">Icona (Emoji)</label
+                                ><input
+                                    type="text"
+                                    id="accIcon"
+                                    placeholder="Es. 💳"
+                                    maxlength="2"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="accColor">Colore</label
+                                ><input
+                                    type="color"
+                                    id="accColor"
+                                    value="#4f46e5"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="accLogo">Logo URL (Opzionale)</label
+                            ><input
+                                type="url"
+                                id="accLogo"
+                                placeholder="https://esempio.com/logo.png"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="accBalance">Saldo iniziale (€)</label
+                            ><input
+                                type="number"
+                                id="accBalance"
+                                step="0.01"
+                                value="0"
+                                placeholder="0,00"
+                            />
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelAccBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <input type="hidden" id="tx-category" required />
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1"
-              >Conto / Carta</label
-            >
-            <select
-              id="tx-account"
-              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-            >
-              <!-- Popolato dinamicamente -->
-            </select>
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1">Data</label>
-            <input
-              type="date"
-              id="tx-date"
-              required
-              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1"
-              >Note (Opzionale)</label
-            >
-            <input
-              type="text"
-              id="tx-note"
-              placeholder="Dettagli aggiuntivi"
-              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm shadow-md mt-2"
-          >
-            Salva Transazione
-          </button>
-        </form>
-      </div>
-    </div>
 
-    <!-- MODALE CATEGORIA -->
-    <div
-      id="modal-category-form"
-      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
-      >
-        <h3 class="text-lg font-bold">Nuova Categoria</h3>
-        <input type="hidden" id="cat-edit-id" />
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Nome Categoria</label>
-          <input
-            type="text"
-            id="cat-name-input"
-            placeholder="Es. Spesa, Svago"
-            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-          />
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs text-gray-400 block mb-1">Emoji Icona</label>
-            <input
-              type="text"
-              id="cat-emoji-input"
-              value="📦"
-              class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-center text-lg border-none focus:ring-2 focus:ring-primary outline-none"
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1">Colore</label>
-            <input
-              type="color"
-              id="cat-color-input"
-              value="#3b82f6"
-              class="w-full h-11 rounded-xl cursor-pointer"
-            />
-          </div>
-        </div>
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Tipo</label>
-          <select
-            id="cat-type-input"
-            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-          >
-            <option value="expense">Uscita</option>
-            <option value="income">Entrata</option>
-          </select>
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button
-            type="button"
-            onclick="closeCustomModal('modal-category-form')"
-            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
-          >
-            Annulla
-          </button>
-          <button
-            type="button"
-            id="save-cat-btn"
-            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
-          >
-            Salva
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODALE CONTO / CARTA -->
-    <div
-      id="modal-account-form"
-      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
-      >
-        <h3 id="modal-account-title" class="text-lg font-bold">
-          Nuovo Conto / Carta
-        </h3>
-        <input type="hidden" id="account-edit-id" />
-        <div>
-          <label class="text-xs text-gray-400 block mb-1"
-            >Nome Conto o Carta</label
-          >
-          <input
-            type="text"
-            id="account-name-input"
-            placeholder="Es. Revolut, Intesa, Contanti"
-            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-          />
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button
-            type="button"
-            onclick="closeCustomModal('modal-account-form')"
-            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
-          >
-            Annulla
-          </button>
-          <button
-            type="button"
-            id="save-account-btn"
-            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
-          >
-            Salva
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODALE DEBITO / CREDITO -->
-    <div
-      id="modal-debt-form"
-      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
-      >
-        <h3 id="modal-debt-title" class="text-lg font-bold">
-          Nuovo Debito / Credito
-        </h3>
-        <input type="hidden" id="debt-edit-id" />
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Descrizione</label>
-          <input
-            type="text"
-            id="debt-title-input"
-            placeholder="Es. Prestito Luca"
-            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-          />
-        </div>
-        <div>
-          <label class="text-xs text-gray-400 block mb-1"
-            >Importo Totale (€)</label
-          >
-          <input
-            type="number"
-            step="0.01"
-            id="debt-target-input"
-            placeholder="100.00"
-            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-          />
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button
-            type="button"
-            onclick="closeCustomModal('modal-debt-form')"
-            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
-          >
-            Annulla
-          </button>
-          <button
-            type="button"
-            id="save-debt-btn"
-            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
-          >
-            Salva
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODALE MODIFICA UTENTE -->
-    <div
-      id="modal-user-edit-form"
-      class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4"
-      >
-        <h3 class="text-lg font-bold">Modifica Utente</h3>
-        <input type="hidden" id="user-original-name" />
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Nome Utente</label>
-          <input
-            type="text"
-            id="user-edit-name-input"
-            class="w-full p-3 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm border-none focus:ring-2 focus:ring-primary outline-none"
-          />
-        </div>
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Colore Profilo</label>
-          <input
-            type="color"
-            id="user-edit-color-input"
-            value="#3b82f6"
-            class="w-full h-11 rounded-xl cursor-pointer bg-transparent border-none"
-          />
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button
-            type="button"
-            onclick="closeCustomModal('modal-user-edit-form')"
-            class="w-1/2 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl font-bold text-sm"
-          >
-            Annulla
-          </button>
-          <button
-            type="button"
-            id="save-user-edit-btn"
-            class="w-1/2 py-3 bg-primary text-white rounded-xl font-bold text-sm"
-          >
-            Salva
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- LOGICA JAVASCRIPT CON FIREBASE -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-      import {
-        getDatabase,
-        ref,
-        set,
-        remove,
-        onValue,
-      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyD_tWdvjxOCFfbPADpGGzSfJ6MRz4O3rzM",
-        authDomain: "gestione-spese-84.firebaseapp.com",
-        databaseURL:
-          "https://gestione-spese-84-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "gestione-spese-84",
-        storageBucket: "gestione-spese-84.firebasestorage.app",
-        messagingSenderId: "375465380274",
-        appId: "1:375465380274:web:e77fe88204c8a4fbe87cab",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-
-      let state = {
-        currentUser: null,
-        users: [],
-        transactions: [],
-        categories: [],
-        accounts: [],
-        debts: [],
-      };
-
-      let balanceChart = null;
-
-      document.addEventListener("DOMContentLoaded", () => {
-        // Data odierna di default per transazioni
-        document.getElementById("tx-date").value = new Date()
-          .toISOString()
-          .split("T")[0];
-
-        initChart();
-        setupNavigation();
-        setupForms();
-        listenAllRealtimeDatabaseNodes();
-
-        document
-          .getElementById("user-selector")
-          .addEventListener("change", (e) => {
-            state.currentUser = e.target.value;
-            updateUserBadgeColor();
-            document.getElementById("drawer-current-user").textContent =
-              state.currentUser;
-            updateChartAndCard();
-            renderCategoriesList();
-            renderAccountsList();
-            renderDebtsList();
-            renderTransactionsList();
-          });
-      });
-
-      window.closeCustomModal = function (id) {
-        document.getElementById(id).classList.add("hidden");
-      };
-
-      function initChart() {
-        const ctx = document.getElementById("balanceChart").getContext("2d");
-        balanceChart = new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels: ["Entrate", "Uscite"],
-            datasets: [
-              {
-                data: [0, 1],
-                backgroundColor: ["#10b981", "#ef4444"],
-                borderWidth: 0,
-              },
-            ],
-          },
-          options: {
-            cutout: "70%",
-            plugins: { legend: { display: false } },
-            responsive: true,
-            maintainAspectRatio: false,
-          },
-        });
-      }
-
-      function listenAllRealtimeDatabaseNodes() {
-        // UTENTI
-        onValue(ref(db, "users"), (snapshot) => {
-          const data = snapshot.val() || {};
-          state.users = Object.keys(data).map((key) => ({
-            name: key,
-            color: data[key].color || "#3b82f6",
-          }));
-          updateUsersDropdown();
-        });
-
-        // TRANSAZIONI
-        onValue(ref(db, "transactions"), (snapshot) => {
-          const data = snapshot.val() || {};
-          state.transactions = Object.keys(data).map((key) => ({
-            id: key,
-            ...data[key],
-          }));
-          updateChartAndCard();
-          renderTransactionsList();
-        });
-
-        // CATEGORIE
-        onValue(ref(db, "categories"), (snapshot) => {
-          const data = snapshot.val() || {};
-          state.categories = Object.keys(data).map((key) => ({
-            id: key,
-            ...data[key],
-          }));
-          renderCategoriesList();
-        });
-
-        // CONTI
-        onValue(ref(db, "accounts"), (snapshot) => {
-          const data = snapshot.val() || {};
-          state.accounts = Object.keys(data).map((key) => ({
-            id: key,
-            ...data[key],
-          }));
-          renderAccountsList();
-        });
-
-        // DEBITI
-        onValue(ref(db, "debts"), (snapshot) => {
-          const data = snapshot.val() || {};
-          state.debts = Object.keys(data).map((key) => ({
-            id: key,
-            ...data[key],
-          }));
-          renderDebtsList();
-        });
-      }
-
-      function updateUserBadgeColor() {
-        const badge = document.getElementById("user-badge-color");
-        const activeUserObj = state.users.find(
-          (u) => u.name === state.currentUser,
-        );
-        if (activeUserObj) {
-          badge.style.backgroundColor = activeUserObj.color;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
-        }
-      }
-
-      function updateUsersDropdown() {
-        const select = document.getElementById("user-selector");
-        select.innerHTML = "";
-
-        const userNames = state.users.map((u) => u.name);
-
-        if (userNames.length === 0) {
-          state.currentUser = null;
-          const opt = document.createElement("option");
-          opt.textContent = "Nessun Utente";
-          select.appendChild(opt);
-          document.getElementById("no-user-banner").classList.remove("hidden");
-        } else {
-          document.getElementById("no-user-banner").classList.add("hidden");
-          if (!state.currentUser || !userNames.includes(state.currentUser)) {
-            state.currentUser = userNames[0];
-          }
-          state.users.forEach((u) => {
-            const opt = document.createElement("option");
-            opt.value = u.name;
-            opt.textContent = u.name;
-            if (u.name === state.currentUser) opt.selected = true;
-            select.appendChild(opt);
-          });
-        }
-
-        updateUserBadgeColor();
-        document.getElementById("drawer-current-user").textContent =
-          state.currentUser || "Nessun utente";
-        renderUsersManagerList();
-        updateChartAndCard();
-        renderCategoriesList();
-        renderAccountsList();
-        renderDebtsList();
-      }
-
-      function setupForms() {
-        // 1. SALVA NUOVO UTENTE CON COLORE
-        document
-          .getElementById("add-user-btn")
-          .addEventListener("click", async () => {
-            const nameInput = document.getElementById("new-user-input");
-            const colorInput = document.getElementById("new-user-color-input");
-            const name = nameInput.value.trim();
-            const color = colorInput.value || "#3b82f6";
-
-            if (name) {
-              await set(ref(db, `users/${name}`), { name, color });
-              nameInput.value = "";
-              colorInput.value = "#3b82f6";
-            } else {
-              alert("Inserisci un nome utente!");
-            }
-          });
-
-        // MODIFICA UTENTE - APERTURA MODALE ED EVENTO SALVATAGGIO
-        window.openEditUserModal = function (name, color) {
-          document.getElementById("user-original-name").value = name;
-          document.getElementById("user-edit-name-input").value = name;
-          document.getElementById("user-edit-color-input").value =
-            color || "#3b82f6";
-          document
-            .getElementById("modal-user-edit-form")
-            .classList.remove("hidden");
-        };
-
-        document
-          .getElementById("save-user-edit-btn")
-          .addEventListener("click", async () => {
-            const oldName = document.getElementById("user-original-name").value;
-            const newName = document
-              .getElementById("user-edit-name-input")
-              .value.trim();
-            const newColor = document.getElementById(
-              "user-edit-color-input",
-            ).value;
-
-            if (!newName) return alert("Inserisci un nome utente valido!");
-
-            if (oldName !== newName) {
-              await remove(ref(db, `users/${oldName}`));
-            }
-
-            await set(ref(db, `users/${newName}`), {
-              name: newName,
-              color: newColor,
-            });
-            if (state.currentUser === oldName) state.currentUser = newName;
-            closeCustomModal("modal-user-edit-form");
-          });
-
-        // 2. MODALE CONTO/CARTA
-        document
-          .getElementById("add-account-btn")
-          .addEventListener("click", () => {
-            if (!state.currentUser)
-              return alert("Seleziona o crea prima un utente!");
-            document.getElementById("account-edit-id").value = "";
-            document.getElementById("account-name-input").value = "";
-            document
-              .getElementById("modal-account-form")
-              .classList.remove("hidden");
-          });
-
-        document
-          .getElementById("save-account-btn")
-          .addEventListener("click", async () => {
-            const name = document
-              .getElementById("account-name-input")
-              .value.trim();
-            const editId =
-              document.getElementById("account-edit-id").value ||
-              "acc_" + Date.now();
-            if (!name) return alert("Inserisci un nome valido!");
-
-            await set(ref(db, `accounts/${editId}`), {
-              id: editId,
-              user: state.currentUser,
-              name,
-            });
-            closeCustomModal("modal-account-form");
-          });
-
-        // 3. MODALE DEBITO/CREDITO
-        document
-          .getElementById("add-debt-btn")
-          .addEventListener("click", () => {
-            if (!state.currentUser)
-              return alert("Seleziona o crea prima un utente!");
-            document.getElementById("debt-edit-id").value = "";
-            document.getElementById("debt-title-input").value = "";
-            document.getElementById("debt-target-input").value = "";
-            document
-              .getElementById("modal-debt-form")
-              .classList.remove("hidden");
-          });
-
-        document
-          .getElementById("save-debt-btn")
-          .addEventListener("click", async () => {
-            const title = document
-              .getElementById("debt-title-input")
-              .value.trim();
-            const target = parseFloat(
-              document.getElementById("debt-target-input").value,
-            );
-            const editId =
-              document.getElementById("debt-edit-id").value ||
-              "debt_" + Date.now();
-
-            if (!title || isNaN(target))
-              return alert("Inserisci un titolo e un importo validi!");
-
-            await set(ref(db, `debts/${editId}`), {
-              id: editId,
-              user: state.currentUser,
-              title,
-              current: 0,
-              target,
-            });
-            closeCustomModal("modal-debt-form");
-          });
-
-        // 4. MODALE CATEGORIA
-        document
-          .getElementById("add-category-btn")
-          .addEventListener("click", () => {
-            if (!state.currentUser)
-              return alert("Seleziona o crea prima un utente!");
-            document.getElementById("cat-edit-id").value = "";
-            document.getElementById("cat-name-input").value = "";
-            document.getElementById("cat-emoji-input").value = "📦";
-            document
-              .getElementById("modal-category-form")
-              .classList.remove("hidden");
-          });
-
-        document
-          .getElementById("save-cat-btn")
-          .addEventListener("click", async () => {
-            const editId =
-              document.getElementById("cat-edit-id").value ||
-              "cat_" + Date.now();
-            const name = document.getElementById("cat-name-input").value.trim();
-            const emoji =
-              document.getElementById("cat-emoji-input").value.trim() || "📦";
-            const color = document.getElementById("cat-color-input").value;
-            const type = document.getElementById("cat-type-input").value;
-
-            if (!name) return alert("Inserisci un nome per la categoria!");
-
-            await set(ref(db, `categories/${editId}`), {
-              id: editId,
-              user: state.currentUser,
-              name,
-              emoji,
-              color,
-              type,
-            });
-            closeCustomModal("modal-category-form");
-          });
-
-        // 5. TRANSAZIONI
-        document
-          .getElementById("transaction-form")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!state.currentUser)
-              return alert("Seleziona prima un profilo utente!");
-
-            const id = "tx_" + Date.now();
-            const newTx = {
-              id,
-              user: state.currentUser,
-              type: document.getElementById("tx-type").value,
-              amount: parseFloat(document.getElementById("tx-amount").value),
-              party: document.getElementById("tx-party").value,
-              category: document.getElementById("tx-category").value,
-              account: document.getElementById("tx-account").value,
-              date: document.getElementById("tx-date").value,
-              note: document.getElementById("tx-note").value,
-              timestamp: new Date().toISOString(),
-            };
-            await set(ref(db, `transactions/${id}`), newTx);
-            closeModal();
-          });
-      }
-
-      function renderUsersManagerList() {
-        const container = document.getElementById("users-manager-list");
-        container.innerHTML = "";
-        state.users.forEach((u) => {
-          const div = document.createElement("div");
-          div.className =
-            "flex items-center justify-between p-2.5 bg-gray-50 dark:bg-slate-700/50 rounded-xl";
-          div.innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded-full border border-black/10" style="background-color: ${u.color};"></div>
-            <span class="text-sm font-semibold">${u.name}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="openEditUserModal('${u.name}', '${u.color}')" class="text-xs text-primary font-bold p-1"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteUser('${u.name}')" class="text-xs text-expense font-bold p-1"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        `;
-          container.appendChild(div);
-        });
-      }
-
-      window.deleteUser = async function (name) {
-        if (confirm(`Eliminare l'utente ${name}?`)) {
-          await remove(ref(db, `users/${name}`));
-        }
-      };
-
-      function renderCategoriesList() {
-        const container = document.getElementById("categories-list");
-        container.innerHTML = "";
-        const userCats = state.categories.filter(
-          (c) => c.user === state.currentUser,
-        );
-
-        userCats.forEach((c) => {
-          const card = document.createElement("div");
-          card.className =
-            "flex items-center justify-between p-3 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm";
-          card.style.backgroundColor = c.color + "15";
-          card.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">${c.emoji}</span>
-            <div>
-              <p class="text-sm font-bold">${c.name}</p>
-              <span class="text-[10px] uppercase font-semibold ${c.type === "income" ? "text-income" : "text-expense"}">${c.type}</span>
+            <!-- MODAL: Debito/Credito -->
+            <div class="modal" id="debtModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="debtModalTitle">Nuovo Debito/Credito</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="debtForm">
+                        <input type="hidden" id="debtId" />
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <div class="type-selector">
+                                <button
+                                    type="button"
+                                    class="type-btn active"
+                                    data-debttype="debt"
+                                >
+                                    <i class="fas fa-arrow-up"></i> Debito
+                                </button>
+                                <button
+                                    type="button"
+                                    class="type-btn"
+                                    data-debttype="credit"
+                                >
+                                    <i class="fas fa-arrow-down"></i> Credito
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="debtPerson">Persona</label
+                            ><input
+                                type="text"
+                                id="debtPerson"
+                                required
+                                placeholder="Es. Marco Rossi"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="debtDescription">Descrizione</label
+                            ><input
+                                type="text"
+                                id="debtDescription"
+                                required
+                                placeholder="Es. Prestito auto"
+                            />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="debtTotal">Importo Totale (€)</label
+                                ><input
+                                    type="number"
+                                    id="debtTotal"
+                                    step="0.01"
+                                    min="0.01"
+                                    required
+                                    placeholder="0,00"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="debtPaid"
+                                    >Già Pagato/Ricevuto (€)</label
+                                ><input
+                                    type="number"
+                                    id="debtPaid"
+                                    step="0.01"
+                                    min="0"
+                                    value="0"
+                                    placeholder="0,00"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="debtDate">Data</label
+                            ><input type="date" id="debtDate" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="debtNotes">Note (Opzionale)</label
+                            ><textarea id="debtNotes" rows="2"></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelDebtBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-          </div>
-          <button onclick="deleteCategory('${c.id}')" class="text-xs text-expense p-1.5"><i class="fa-solid fa-trash"></i></button>
-        `;
-          container.appendChild(card);
-        });
-      }
 
-      window.deleteCategory = async function (id) {
-        if (confirm("Eliminare la categoria?")) {
-          await remove(ref(db, `categories/${id}`));
-        }
-      };
+            <!-- MODAL: Pagamento -->
+            <div class="modal" id="paymentModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Aggiungi Pagamento</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="paymentForm">
+                        <input type="hidden" id="paymentDebtId" />
+                        <div class="form-group">
+                            <label for="paymentAmount">Importo (€)</label
+                            ><input
+                                type="number"
+                                id="paymentAmount"
+                                step="0.01"
+                                min="0.01"
+                                required
+                                placeholder="0,00"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentDate">Data</label
+                            ><input type="date" id="paymentDate" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentNote">Nota</label
+                            ><input
+                                type="text"
+                                id="paymentNote"
+                                placeholder="Es. Prima rata"
+                            />
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelPaymentBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Aggiungi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-      function renderAccountsList() {
-        const container = document.getElementById("accounts-list");
-        container.innerHTML = "";
-        const userAccs = state.accounts.filter(
-          (a) => a.user === state.currentUser,
-        );
+            <!-- MODAL: Utente -->
+            <div class="modal" id="userModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="userModalTitle">Nuovo Utente</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="userForm">
+                        <input type="hidden" id="userId" />
+                        <div class="form-group">
+                            <label for="userNameInput">Nome Utente</label
+                            ><input
+                                type="text"
+                                id="userNameInput"
+                                required
+                                placeholder="Es. Mario Rossi"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="userColor">Colore Profilo</label
+                            ><input
+                                type="color"
+                                id="userColor"
+                                value="#4f46e5"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="userPassword"
+                                >Password (Opzionale)</label
+                            ><input
+                                type="password"
+                                id="userPassword"
+                                placeholder="Lascia vuoto per nessuna"
+                            />
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelUserBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-        userAccs.forEach((a) => {
-          const card = document.createElement("div");
-          card.className =
-            "flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm";
-          card.innerHTML = `
-          <span class="text-sm font-bold">${a.name}</span>
-          <button onclick="deleteAccount('${a.id}')" class="text-xs text-expense p-1.5"><i class="fa-solid fa-trash"></i></button>
-        `;
-          container.appendChild(card);
-        });
-      }
+            <!-- MODAL: Password -->
+            <div class="modal" id="passwordModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="pwdModalTitle">Imposta Password</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label for="pwdCurrent">Password attuale</label
+                            ><input
+                                type="password"
+                                id="pwdCurrent"
+                                placeholder="Lascia vuoto se non hai password"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="pwdNew">Nuova password</label
+                            ><input
+                                type="password"
+                                id="pwdNew"
+                                placeholder="Vuoto = rimuovi password"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="pwdConfirm"
+                                >Conferma nuova password</label
+                            ><input type="password" id="pwdConfirm" />
+                        </div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelPwdBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-      window.deleteAccount = async function (id) {
-        if (confirm("Eliminare il conto?")) {
-          await remove(ref(db, `accounts/${id}`));
-        }
-      };
+            <!-- MODAL: Login -->
+            <div class="modal" id="loginModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🔒 Inserisci Password</h3>
+                    </div>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label
+                                >Profilo: <strong id="loginUserName"></strong
+                            ></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label
+                            ><input
+                                type="password"
+                                id="loginPassword"
+                                required
+                            />
+                        </div>
+                        <div id="loginError" class="error-msg"></div>
+                        <div class="modal-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelLoginBtn"
+                            >
+                                Annulla
+                            </button>
+                            <button type="submit" class="btn-save">
+                                Accedi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-      function renderDebtsList() {
-        const container = document.getElementById("debts-list");
-        container.innerHTML = "";
-        const userDebts = state.debts.filter(
-          (d) => d.user === state.currentUser,
-        );
-
-        userDebts.forEach((d) => {
-          const card = document.createElement("div");
-          card.className =
-            "p-4 bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm space-y-2";
-          card.innerHTML = `
-          <div class="flex justify-between items-center">
-            <h4 class="font-bold text-base">${d.title}</h4>
-            <span class="text-sm font-extrabold">${d.current.toFixed(2)} / ${d.target.toFixed(2)} €</span>
-          </div>
-        `;
-          container.appendChild(card);
-        });
-      }
-
-      function renderTransactionsList() {
-        const container = document.getElementById("transactions-list");
-        const containerFull = document.getElementById("transactions-full-list");
-
-        container.innerHTML = "";
-        if (containerFull) containerFull.innerHTML = "";
-
-        const userTx = state.transactions.filter(
-          (t) => t.user === state.currentUser,
-        );
-
-        userTx.forEach((t) => {
-          const div = document.createElement("div");
-          div.className =
-            "p-3 bg-white dark:bg-slate-800 rounded-xl flex justify-between items-center shadow-sm";
-          div.innerHTML = `
-          <div>
-            <p class="font-bold text-sm">${t.category} - ${t.party || "Generico"}</p>
-            <p class="text-xs text-gray-400">${t.date}</p>
-          </div>
-          <span class="font-bold ${t.type === "income" ? "text-income" : "text-expense"}">${t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)} €</span>
-        `;
-          container.appendChild(div);
-          if (containerFull) containerFull.appendChild(div.cloneNode(true));
-        });
-      }
-
-      function updateChartAndCard() {
-        if (!state.currentUser) return;
-        const userTx = state.transactions.filter(
-          (t) => t.user === state.currentUser,
-        );
-        const income = userTx
-          .filter((t) => t.type === "income")
-          .reduce((acc, t) => acc + Number(t.amount), 0);
-        const expense = userTx
-          .filter((t) => t.type === "expense")
-          .reduce((acc, t) => acc + Number(t.amount), 0);
-        const total = income - expense;
-
-        document.getElementById("summary-income").textContent =
-          `${income.toFixed(2)} €`;
-        document.getElementById("summary-expense").textContent =
-          `-${expense.toFixed(2)} €`;
-
-        const totalEl = document.getElementById("summary-total");
-        totalEl.textContent = `${total.toFixed(2)} €`;
-        totalEl.className =
-          total < 0 ? "font-bold text-expense" : "font-bold text-income";
-
-        if (balanceChart) {
-          balanceChart.data.datasets[0].data = [
-            income === 0 && expense === 0 ? 0 : income,
-            expense === 0 && income === 0 ? 1 : expense,
-          ];
-          balanceChart.update();
-        }
-      }
-
-      function setupNavigation() {
-        document
-          .getElementById("open-menu-btn")
-          .addEventListener("click", toggleDrawer);
-        document
-          .getElementById("close-menu-btn")
-          .addEventListener("click", toggleDrawer);
-        document
-          .getElementById("drawer-overlay")
-          .addEventListener("click", toggleDrawer);
-
-        const navItems = document.querySelectorAll("#nav-container .nav-item");
-        navItems.forEach((item) => {
-          item.addEventListener("click", (e) => {
-            e.preventDefault();
-            const targetPage = item.dataset.page;
-            document
-              .querySelectorAll("main > section")
-              .forEach((sec) => sec.classList.add("hidden"));
-            document
-              .getElementById(`page-${targetPage}`)
-              .classList.remove("hidden");
-            toggleDrawer();
-          });
-        });
-
-        document.getElementById("fab-main").addEventListener("click", () => {
-          const fabOptions = document.getElementById("fab-options");
-          fabOptions.classList.toggle("opacity-0");
-          fabOptions.classList.toggle("pointer-events-none");
-        });
-
-        document
-          .getElementById("btn-add-income")
-          .addEventListener("click", () => openModal("income"));
-        document
-          .getElementById("btn-add-expense")
-          .addEventListener("click", () => openModal("expense"));
-        document
-          .getElementById("close-modal-btn")
-          .addEventListener("click", closeModal);
-      }
-
-      function openModal(type) {
-        if (!state.currentUser)
-          return alert("Crea prima un profilo utente nelle Impostazioni!");
-
-        document.getElementById("tx-type").value = type;
-        document.getElementById("modal-title").textContent =
-          type === "income" ? "Nuova Entrata" : "Nuova Uscita";
-
-        const catGrid = document.getElementById("modal-category-grid");
-        catGrid.innerHTML = "";
-        const userCats = state.categories.filter(
-          (c) => c.user === state.currentUser && c.type === type,
-        );
-
-        if (userCats.length === 0) {
-          catGrid.innerHTML =
-            '<p class="text-xs text-gray-400 col-span-3 text-center py-2">Nessuna categoria trovata. Creala prima nella sezione Categorie.</p>';
-        } else {
-          userCats.forEach((c, idx) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className =
-              "p-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700";
-            btn.innerHTML = `${c.emoji} ${c.name}`;
-            btn.addEventListener("click", () => {
-              document.getElementById("tx-category").value = c.name;
-              catGrid
-                .querySelectorAll("button")
-                .forEach((b) =>
-                  b.classList.remove("bg-primary/20", "border-primary"),
-                );
-              btn.classList.add("bg-primary/20", "border-primary");
-            });
-            if (idx === 0) btn.click();
-            catGrid.appendChild(btn);
-          });
-        }
-
-        const accSelect = document.getElementById("tx-account");
-        accSelect.innerHTML = "";
-        const userAccs = state.accounts.filter(
-          (a) => a.user === state.currentUser,
-        );
-        if (userAccs.length === 0) {
-          const opt = document.createElement("option");
-          opt.textContent = "Nessun conto disponibile";
-          accSelect.appendChild(opt);
-        } else {
-          userAccs.forEach((a) => {
-            const opt = document.createElement("option");
-            opt.value = a.name;
-            opt.textContent = a.name;
-            accSelect.appendChild(opt);
-          });
-        }
-
-        document.getElementById("transaction-modal").classList.remove("hidden");
-      }
-
-      function closeModal() {
-        document.getElementById("transaction-modal").classList.add("hidden");
-      }
-
-      function toggleDrawer() {
-        document.getElementById("drawer").classList.toggle("-translate-x-full");
-        document.getElementById("drawer-overlay").classList.toggle("hidden");
-      }
-    </script>
-  </body>
+        <script src="script.js"></script>
+    </body>
 </html>
