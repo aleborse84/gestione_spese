@@ -527,8 +527,18 @@ $("filterYear").addEventListener("change", renderMovements);
 
 function renderCategories() {
   if (!state.data) return;
-  renderCategoryGrid("incomeCategoriesGrid", state.data.categories.filter((c) => c.type === "income"));
-  renderCategoryGrid("expenseCategoriesGrid", state.data.categories.filter((c) => c.type === "expense"));
+  
+  // Ordina le categorie per nome (A→Z) con supporto caratteri italiani
+  const incomeCats = state.data.categories
+    .filter((c) => c.type === "income")
+    .sort((a, b) => a.name.localeCompare(b.name, "it"));
+  
+  const expenseCats = state.data.categories
+    .filter((c) => c.type === "expense")
+    .sort((a, b) => a.name.localeCompare(b.name, "it"));
+  
+  renderCategoryGrid("incomeCategoriesGrid", incomeCats);
+  renderCategoryGrid("expenseCategoriesGrid", expenseCats);
 }
 function renderCategoryGrid(containerId, categories) {
   const container = $(containerId);
