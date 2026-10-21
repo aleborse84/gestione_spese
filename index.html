@@ -3,11 +3,10 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#4f46e5" />
         <title>AB Tracker</title>
-        <link rel="icon" type="image/png" href="favicon.png" />
         <link rel="icon" type="image/svg+xml" href="favicon.svg" />
         <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+        <meta name="theme-color" content="#4f46e5" />
         <link rel="stylesheet" href="style.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,126 +18,102 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     </head>
     <body>
-        <div class="app">
-            <!-- SCHERMATA LOGIN/REGISTRAZIONE -->
-            <div class="auth-screen" id="authScreen">
-                <div class="auth-container">
-                    <div class="auth-logo">
-                        <span class="logo-ab">AB TRACKER</span>
-                    </div></br>
-
-                    <form id="authForm">
-                        <div class="form-group">
-                            <label for="authEmail">Email</label>
+        <!-- SCHERMATA LOGIN -->
+        <div class="auth-screen" id="authScreen">
+            <div class="auth-container">
+                <div class="auth-logo">
+                    <span class="logo-ab">AB TRACKER</span>
+                </div>
+                <br />
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="authEmail">Email</label>
+                        <input
+                            type="email"
+                            id="authEmail"
+                            required
+                            placeholder="nome@esempio.com"
+                        />
+                    </div>
+                    <div class="form-group password-group">
+                        <label for="authPassword">Password</label>
+                        <div class="password-wrapper">
                             <input
-                                type="email"
-                                id="authEmail"
+                                type="password"
+                                id="authPassword"
                                 required
-                                placeholder="nome@esempio.com"
+                                placeholder="••••••••"
+                                minlength="6"
                             />
+                            <button
+                                type="button"
+                                class="toggle-password"
+                                data-target="authPassword"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
-                        <div class="form-group password-group">
-                            <label for="authPassword">Password</label>
-                            <div class="password-wrapper">
-                                <input
-                                    type="password"
-                                    id="authPassword"
-                                    required
-                                    placeholder="••••••••"
-                                    minlength="6"
-                                />
-                                <button
-                                    type="button"
-                                    class="toggle-password"
-                                    data-target="authPassword"
-                                    title="Mostra/Nascondi password"
-                                >
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="auth-forgot">
-                                <button
-                                    type="button"
-                                    class="link-btn"
-                                    id="forgotPasswordBtn"
-                                >
-                                    Password dimenticata?
-                                </button>
-                            </div>
-                        </div>
-                        <div
-                            class="form-group"
-                            id="authNameGroup"
-                            style="display: none"
-                        >
-                            <label for="authName">Nome (opzionale)</label>
-                            <input
-                                type="text"
-                                id="authName"
-                                placeholder="Il tuo nome"
-                            />
-                        </div>
-
-                        <div
-                            class="form-group"
-                            id="authNameGroup"
-                            style="display: none"
-                        >
-                            <label for="authName">Nome (opzionale)</label>
-                            <input
-                                type="text"
-                                id="authName"
-                                placeholder="Il tuo nome"
-                            />
-                        </div>
-
-                        <div id="authError" class="error-msg"></div>
+                    </div>
+                    <div class="auth-forgot">
                         <button
-                            type="submit"
-                            class="btn-save"
-                            id="authSubmitBtn"
-                            style="width: 100%; margin-top: 10px"
+                            type="button"
+                            class="link-btn"
+                            id="forgotPasswordBtn"
                         >
-                            Accedi
-                        </button>
-                    </form>
-
-                    <div class="auth-switch">
-                        <span id="authSwitchText">Non hai un account?</span>
-                        <button class="link-btn" id="authSwitchBtn">
-                            Registrati
+                            Password dimenticata?
                         </button>
                     </div>
-
-                    <button
-                        type="button"
-                        id="offlineModeBtn"
-                        class="btn-outline"
-                        style="width: 100%; margin-top: 15px"
+                    <div
+                        class="form-group"
+                        id="authNameGroup"
+                        style="display: none"
                     >
-                        <i class="fas fa-wifi-slash"></i> Test Offline (Locale)
+                        <label for="authName">Nome (opzionale)</label>
+                        <input
+                            type="text"
+                            id="authName"
+                            placeholder="Il tuo nome"
+                        />
+                    </div>
+                    <div id="authError" class="error-msg"></div>
+                    <button
+                        type="submit"
+                        class="btn-save"
+                        id="authSubmitBtn"
+                        style="width: 100%; margin-top: 10px"
+                    >
+                        Accedi
+                    </button>
+                </form>
+                <div class="auth-switch">
+                    <span id="authSwitchText">Non hai un account?</span>
+                    <button type="button" class="link-btn" id="authSwitchBtn">
+                        Registrati
                     </button>
                 </div>
+                <button type="button" id="offlineModeBtn">
+                    <i class="fas fa-wifi-slash"></i> Test Offline (Locale)
+                </button>
             </div>
-            <!-- Overlay per chiudere la sidebar su mobile -->
+        </div>
+
+        <div class="app">
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
             <!-- Sidebar -->
             <aside class="sidebar">
                 <div class="logo"><span class="logo-ab">AB TRACKER</span></div>
-
                 <div class="theme-toggle-sidebar">
-                    <button
-                        class="theme-btn"
-                        id="themeBtnSidebar"
-                        title="Cambia tema"
-                    >
-                        <i class="fas fa-moon" id="themeIconSidebar"></i>
-                        <span id="themeLabelSidebar">Dark Mode</span>
+                    <button class="theme-btn" id="themeBtnSidebar">
+                        <i class="fas fa-moon" id="themeIconSidebar"></i
+                        ><span id="themeLabelSidebar">Dark Mode</span>
                     </button>
                 </div>
-
                 <nav class="sidebar-nav">
                     <button class="nav-link active" data-section="dashboard">
                         <i class="fas fa-chart-pie"></i> Dashboard
@@ -160,10 +135,7 @@
                     </button>
                 </nav>
                 <div class="sidebar-footer">
-                    <span class="version"
-                        >© AB Lab by Borsetto Alessio - Tutti i diritti
-                        riservati</span
-                    >
+                    <span class="version">v3.0 • Cloud Sync</span>
                 </div>
             </aside>
 
@@ -175,14 +147,32 @@
                     </button>
                     <h1 class="page-title" id="pageTitle">Dashboard</h1>
                     <div class="user-selector">
-                        <button class="user-btn" id="userBtn">
-                            <span class="user-avatar" id="userAvatar">?</span>
-                            <span class="user-name" id="userName"
-                                >Nessun utente</span
-                            >
+                        <button
+                            class="user-btn profile-trigger"
+                            id="userBtn"
+                            title="Cambia profilo"
+                        >
+                            <span
+                                class="profile-dot-inline"
+                                id="profileDot"
+                            ></span>
+                            <span class="user-name" id="userName">—</span>
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <div class="user-dropdown" id="userDropdown"></div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div id="profilesList"></div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-footer">
+                                <div
+                                    id="dropdownEmail"
+                                    style="
+                                        font-size: 11px;
+                                        color: var(--text-muted);
+                                        text-align: center;
+                                    "
+                                ></div>
+                            </div>
+                        </div>
                     </div>
                     <button class="fab-add" id="fabAdd">
                         <i class="fas fa-plus"></i>
@@ -221,7 +211,7 @@
                         </div>
                         <div class="panel">
                             <div class="panel-header">
-                                <h2>Ultimi Movimenti (mese attuale)</h2>
+                                <h2>Ultimi Movimenti</h2>
                                 <button class="link-btn" data-goto="movements">
                                     Vedi tutti →
                                 </button>
@@ -259,8 +249,8 @@
                         </div>
                         <div class="toolbar">
                             <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input
+                                <i class="fas fa-search"></i
+                                ><input
                                     type="text"
                                     id="searchInput"
                                     placeholder="Cerca movimenti..."
@@ -402,23 +392,39 @@
                                         Attiva la dark mode
                                     </div>
                                 </div>
-                                <label class="switch">
-                                    <input type="checkbox" id="themeToggle" />
-                                    <span class="slider"></span>
-                                </label>
+                                <label class="switch"
+                                    ><input
+                                        type="checkbox"
+                                        id="themeToggle" /><span
+                                        class="slider"
+                                    ></span
+                                ></label>
                             </div>
                         </div>
-
                         <div class="panel">
                             <div class="panel-header"><h2>Dati</h2></div>
                             <div class="settings-actions">
-                                <button class="btn-action" id="exportBtn"><i class="fas fa-download"></i> Esporta dati</button>
-                                <button class="btn-action" id="importBtn"><i class="fas fa-upload"></i> Importa dati</button>
-                                <input type="file" id="importFile" accept=".json" style="display:none">
-                                <button class="btn-action danger" id="clearAllDataBtn"><i class="fas fa-trash-alt"></i> Elimina tutti i dati</button>
+                                <button class="btn-action" id="exportBtn">
+                                    <i class="fas fa-download"></i> Esporta
+                                </button>
+                                <button class="btn-action" id="importBtn">
+                                    <i class="fas fa-upload"></i> Importa
+                                </button>
+                                <input
+                                    type="file"
+                                    id="importFile"
+                                    accept=".json"
+                                    style="display: none"
+                                />
+                                <button
+                                    class="btn-action danger"
+                                    id="clearAllDataBtn"
+                                >
+                                    <i class="fas fa-trash-alt"></i> Elimina
+                                    dati
+                                </button>
                             </div>
                         </div>
-
                         <div class="panel">
                             <div class="panel-header"><h2>Account</h2></div>
                             <div class="settings-row">
@@ -430,7 +436,7 @@
                                         —
                                     </div>
                                     <div class="settings-desc">
-                                        Email account collegato
+                                        Email collegata
                                     </div>
                                 </div>
                                 <button
@@ -440,15 +446,46 @@
                                     <i class="fas fa-sign-out-alt"></i> Logout
                                 </button>
                             </div>
-                            <div class="panel danger-zone">
-                                <div class="panel-header"><h2 style="color:var(--expense)"><i class="fas fa-exclamation-triangle" style="margin-right:8px"></i>Zona pericolosa</h2></div>
-                                <div class="settings-row">
-                                    <div>
-                                        <div class="settings-title">Elimina il tuo account</div>
-                                        <div class="settings-desc">Questa azione è irreversibile. Tutti i tuoi dati verranno eliminati definitivamente.</div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2>Gestione Profili</h2>
+                                <button class="btn-primary" id="addProfileBtn2">
+                                    <i class="fas fa-plus"></i> Nuovo
+                                </button>
+                            </div>
+                            <div
+                                class="users-list"
+                                id="profilesListSettings"
+                            ></div>
+                        </div>
+                        <div class="panel danger-zone">
+                            <div class="panel-header">
+                                <h2>
+                                    <i
+                                        class="fas fa-exclamation-triangle"
+                                        style="margin-right: 8px"
+                                    ></i
+                                    >Zona pericolosa
+                                </h2>
+                            </div>
+                            <div class="settings-row">
+                                <div>
+                                    <div class="settings-title">
+                                        Elimina il tuo account
                                     </div>
-                                    <button class="btn-action danger" id="deleteAccountBtn"><i class="fas fa-user-times"></i> Elimina account</button>
+                                    <div class="settings-desc">
+                                        Azione irreversibile. Account e dati
+                                        verranno persi per sempre.
+                                    </div>
                                 </div>
+                                <button
+                                    class="btn-action danger"
+                                    id="deleteAccountBtn"
+                                >
+                                    <i class="fas fa-user-times"></i> Elimina
+                                    account
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -489,9 +526,9 @@
                                     class="type-btn active"
                                     data-type="income"
                                 >
-                                    <i class="fas fa-arrow-down"></i> Entrata
-                                </button>
-                                <button
+                                    <i class="fas fa-arrow-down"></i>
+                                    Entrata</button
+                                ><button
                                     type="button"
                                     class="type-btn"
                                     data-type="expense"
@@ -537,12 +574,8 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="mvNotes">Note (Opzionale)</label
-                            ><textarea
-                                id="mvNotes"
-                                rows="2"
-                                placeholder="Dettagli aggiuntivi..."
-                            ></textarea>
+                            <label for="mvNotes">Note</label
+                            ><textarea id="mvNotes" rows="2"></textarea>
                         </div>
                         <div class="modal-actions">
                             <button
@@ -550,9 +583,8 @@
                                 class="btn-cancel"
                                 id="cancelMvBtn"
                             >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
+                                Annulla</button
+                            ><button type="submit" class="btn-save">
                                 Salva
                             </button>
                         </div>
@@ -616,7 +648,7 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="catIcon">Icona (emoji)</label
+                                <label for="catIcon">Icona</label
                                 ><input
                                     type="text"
                                     id="catIcon"
@@ -642,9 +674,8 @@
                                     class="type-btn active"
                                     data-cattype="expense"
                                 >
-                                    Uscita
-                                </button>
-                                <button
+                                    Uscita</button
+                                ><button
                                     type="button"
                                     class="type-btn"
                                     data-cattype="income"
@@ -659,9 +690,8 @@
                                 class="btn-cancel"
                                 id="cancelCatBtn"
                             >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
+                                Annulla</button
+                            ><button type="submit" class="btn-save">
                                 Salva
                             </button>
                         </div>
@@ -674,13 +704,13 @@
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3 id="accModalTitle">Nuovo Conto / Carta</h3>
+                        <h3 id="accModalTitle">Nuovo Conto</h3>
                         <button class="close-modal">&times;</button>
                     </div>
                     <form id="accountForm">
                         <input type="hidden" id="accId" />
                         <div class="form-group">
-                            <label for="accName">Nome Conto o Carta</label
+                            <label for="accName">Nome Conto</label
                             ><input
                                 type="text"
                                 id="accName"
@@ -690,11 +720,11 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="accIcon">Icona (Emoji)</label
+                                <label for="accIcon">Icona</label
                                 ><input
                                     type="text"
                                     id="accIcon"
-                                    placeholder="Es. 💳"
+                                    placeholder="💳"
                                     maxlength="2"
                                 />
                             </div>
@@ -712,17 +742,16 @@
                             ><input
                                 type="url"
                                 id="accLogo"
-                                placeholder="https://esempio.com/logo.png"
+                                placeholder="https://..."
                             />
                         </div>
                         <div class="form-group">
-                            <label for="accBalance">Saldo iniziale (€)</label
+                            <label for="accBalance">Saldo iniziale</label
                             ><input
                                 type="number"
                                 id="accBalance"
                                 step="0.01"
                                 value="0"
-                                placeholder="0,00"
                             />
                         </div>
                         <div class="modal-actions">
@@ -731,9 +760,8 @@
                                 class="btn-cancel"
                                 id="cancelAccBtn"
                             >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
+                                Annulla</button
+                            ><button type="submit" class="btn-save">
                                 Salva
                             </button>
                         </div>
@@ -741,7 +769,7 @@
                 </div>
             </div>
 
-            <!-- MODAL: Debito/Credito -->
+            <!-- MODAL: Debito -->
             <div class="modal" id="debtModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -759,57 +787,43 @@
                                     class="type-btn active"
                                     data-debttype="debt"
                                 >
-                                    <i class="fas fa-arrow-up"></i> Debito
-                                </button>
-                                <button
+                                    Debito</button
+                                ><button
                                     type="button"
                                     class="type-btn"
                                     data-debttype="credit"
                                 >
-                                    <i class="fas fa-arrow-down"></i> Credito
+                                    Credito
                                 </button>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="debtPerson">Persona</label
-                            ><input
-                                type="text"
-                                id="debtPerson"
-                                required
-                                placeholder="Es. Marco Rossi"
-                            />
+                            ><input type="text" id="debtPerson" required />
                         </div>
                         <div class="form-group">
                             <label for="debtDescription">Descrizione</label
-                            ><input
-                                type="text"
-                                id="debtDescription"
-                                required
-                                placeholder="Es. Prestito auto"
-                            />
+                            ><input type="text" id="debtDescription" required />
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="debtTotal">Importo Totale (€)</label
+                                <label for="debtTotal">Totale</label
                                 ><input
                                     type="number"
                                     id="debtTotal"
                                     step="0.01"
                                     min="0.01"
                                     required
-                                    placeholder="0,00"
                                 />
                             </div>
                             <div class="form-group">
-                                <label for="debtPaid"
-                                    >Già Pagato/Ricevuto (€)</label
+                                <label for="debtPaid">Già pagato</label
                                 ><input
                                     type="number"
                                     id="debtPaid"
                                     step="0.01"
                                     min="0"
                                     value="0"
-                                    placeholder="0,00"
                                 />
                             </div>
                         </div>
@@ -817,19 +831,14 @@
                             <label for="debtDate">Data</label
                             ><input type="date" id="debtDate" required />
                         </div>
-                        <div class="form-group">
-                            <label for="debtNotes">Note (Opzionale)</label
-                            ><textarea id="debtNotes" rows="2"></textarea>
-                        </div>
                         <div class="modal-actions">
                             <button
                                 type="button"
                                 class="btn-cancel"
                                 id="cancelDebtBtn"
                             >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
+                                Annulla</button
+                            ><button type="submit" class="btn-save">
                                 Salva
                             </button>
                         </div>
@@ -848,27 +857,18 @@
                     <form id="paymentForm">
                         <input type="hidden" id="paymentDebtId" />
                         <div class="form-group">
-                            <label for="paymentAmount">Importo (€)</label
+                            <label for="paymentAmount">Importo</label
                             ><input
                                 type="number"
                                 id="paymentAmount"
                                 step="0.01"
                                 min="0.01"
                                 required
-                                placeholder="0,00"
                             />
                         </div>
                         <div class="form-group">
                             <label for="paymentDate">Data</label
                             ><input type="date" id="paymentDate" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="paymentNote">Nota</label
-                            ><input
-                                type="text"
-                                id="paymentNote"
-                                placeholder="Es. Prima rata"
-                            />
                         </div>
                         <div class="modal-actions">
                             <button
@@ -876,9 +876,8 @@
                                 class="btn-cancel"
                                 id="cancelPaymentBtn"
                             >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
+                                Annulla</button
+                            ><button type="submit" class="btn-save">
                                 Aggiungi
                             </button>
                         </div>
@@ -886,153 +885,42 @@
                 </div>
             </div>
 
-            <!-- MODAL: Utente -->
-            <div class="modal" id="userModal">
+            <!-- MODAL: Profilo -->
+            <div class="modal" id="profileModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3 id="userModalTitle">Nuovo Utente</h3>
+                        <h3 id="profileModalTitle">Nuovo Profilo</h3>
                         <button class="close-modal">&times;</button>
                     </div>
-                    <form id="userForm">
-                        <input type="hidden" id="userId" />
+                    <form id="profileForm">
+                        <input type="hidden" id="profileId" />
                         <div class="form-group">
-                            <label for="userNameInput">Nome Utente</label
+                            <label for="profileName">Nome Profilo</label
                             ><input
                                 type="text"
-                                id="userNameInput"
+                                id="profileName"
                                 required
-                                placeholder="Es. Mario Rossi"
+                                placeholder="Es. Personale, Lavoro"
                             />
                         </div>
                         <div class="form-group">
-                            <label for="userColor">Colore Profilo</label
+                            <label for="profileColor">Colore</label
                             ><input
                                 type="color"
-                                id="userColor"
+                                id="profileColor"
                                 value="#4f46e5"
                             />
                         </div>
-                        <div class="form-group">
-                            <label for="userPassword"
-                                >Password (Opzionale)</label
-                            ><input
-                                type="password"
-                                id="userPassword"
-                                placeholder="Lascia vuoto per nessuna"
-                            />
-                        </div>
                         <div class="modal-actions">
                             <button
                                 type="button"
                                 class="btn-cancel"
-                                id="cancelUserBtn"
+                                id="cancelProfileBtn"
                             >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
+                                Annulla</button
+                            ><button type="submit" class="btn-save">
                                 Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- MODAL: Password -->
-            <div class="modal" id="passwordModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="pwdModalTitle">Imposta Password</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <form id="passwordForm">
-                        <div class="form-group">
-                            <label for="pwdCurrent">Password attuale</label
-                            ><input
-                                type="password"
-                                id="pwdCurrent"
-                                placeholder="Lascia vuoto se non hai password"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="pwdNew">Nuova password</label
-                            ><input
-                                type="password"
-                                id="pwdNew"
-                                placeholder="Vuoto = rimuovi password"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="pwdConfirm"
-                                >Conferma nuova password</label
-                            ><input type="password" id="pwdConfirm" />
-                        </div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelPwdBtn"
-                            >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
-                                Salva
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- MODAL: Login -->
-            <div class="modal" id="loginModal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>🔒 Inserisci Password</h3>
-                    </div>
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <label
-                                >Profilo: <strong id="loginUserName"></strong
-                            ></label>
-                        </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Password</label
-                            ><input
-                                type="password"
-                                id="loginPassword"
-                                required
-                            />
-                        </div>
-                        <div id="loginError" class="error-msg"></div>
-                        <div class="modal-actions">
-                            <button
-                                type="button"
-                                class="btn-cancel"
-                                id="cancelLoginBtn"
-                            >
-                                Annulla
-                            </button>
-                            <button type="submit" class="btn-save">
-                                Accedi
-                            </button>
-                            <button
-                                type="button"
-                                id="offlineModeBtn"
-                                style="
-                                    display: none;
-                                    width: 100%;
-                                    margin-top: 15px;
-                                    padding: 10px;
-                                    background: #f3f4f6;
-                                    border: 1px solid #d1d5db;
-                                    border-radius: 6px;
-                                    cursor: pointer;
-                                "
-                            >
-                                <i class="fas fa-wifi-slash"></i> Test Offline
-                                (Solo Locale)
                             </button>
                         </div>
                     </form>
@@ -1044,34 +932,60 @@
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3 id="confirmModalTitle">Conferma operazione</h3>
+                        <h3 id="confirmModalTitle">Conferma</h3>
                         <button class="close-modal">&times;</button>
                     </div>
-                    <p id="confirmModalDesc" style="color:var(--text-muted);font-size:14px;margin-bottom:20px"></p>
+                    <p
+                        id="confirmModalDesc"
+                        style="
+                            color: var(--text-muted);
+                            font-size: 14px;
+                            margin-bottom: 20px;
+                        "
+                    ></p>
                     <form id="confirmPasswordForm">
                         <div class="form-group">
-                            <label for="confirmPasswordInput">Inserisci la tua password per confermare</label>
+                            <label for="confirmPasswordInput"
+                                >Inserisci la tua password</label
+                            >
                             <div class="password-wrapper">
-                                <input type="password" id="confirmPasswordInput" required placeholder="••••••••">
-                                <button type="button" class="toggle-password" data-target="confirmPasswordInput" title="Mostra/Nascondi password">
+                                <input
+                                    type="password"
+                                    id="confirmPasswordInput"
+                                    required
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    data-target="confirmPasswordInput"
+                                >
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                         </div>
                         <div id="confirmError" class="error-msg"></div>
                         <div class="modal-actions">
-                            <button type="button" class="btn-cancel" id="cancelConfirmBtn">Annulla</button>
-                            <button type="submit" class="btn-save" id="confirmSubmitBtn" style="background:var(--expense)">Conferma</button>
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                id="cancelConfirmBtn"
+                            >
+                                Annulla</button
+                            ><button
+                                type="submit"
+                                class="btn-save"
+                                id="confirmSubmitBtn"
+                                style="background: var(--expense)"
+                            >
+                                Conferma
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Firebase SDK -->
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
         <script src="script.js"></script>
     </body>
 </html>
