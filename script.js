@@ -284,6 +284,56 @@ auth.onAuthStateChanged((user) => {
 });
 
 // ============================================
+// TOGGLE MOSTRA/NASCONDI PASSWORD
+// ============================================
+document.querySelectorAll(".toggle-password").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const input = document.getElementById(btn.dataset.target);
+    const icon = btn.querySelector("i");
+
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  });
+});
+
+// ============================================
+// RECUPERO PASSWORD DIMENTICATA
+// ============================================
+$("forgotPasswordBtn").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+  const errorDiv = $("authError");
+
+  if (!email) {
+    errorDiv.textContent = "⚠️ Inserisci prima la tua email nel campo sopra.";
+    errorDiv.className = "error-msg"; // Reset colore
+    $("authEmail").focus();
+    return;
+  }
+
+  try {
+    errorDiv.textContent = "⏳ Invio email in corso...";
+    errorDiv.className = "error-msg";
+
+    // Firebase invia automaticamente l'email di reset
+    await auth.sendPasswordResetEmail(email);
+
+    errorDiv.textContent =
+      "✅ Email di ripristino inviata! Controlla la tua casella di posta (anche lo spam).";
+    errorDiv.className = "error-msg success";
+  } catch (err) {
+    errorDiv.textContent = translateAuthError(err.code);
+    errorDiv.className = "error-msg";
+  }
+});
+
+// ============================================
 // SICUREZZA: MODALITÀ OFFLINE SOLO PER LOCALHOST
 // ============================================
 function enableOfflineMode() {

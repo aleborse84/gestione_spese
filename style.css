@@ -1441,6 +1441,50 @@ body.is-local #offlineModeBtn {
     display: block !important;
 }
 
+/* ==========================================
+   PASSWORD TOGGLE & FORGOT PASSWORD
+   ========================================== */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px; /* Spazio per l'icona dell'occhio */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password:hover {
+    color: var(--text-main);
+}
+
+.auth-forgot {
+    text-align: left;
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+
+/* Messaggio di successo per il reset password */
+.error-msg.success {
+    color: var(--income) !important;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .sidebar {
