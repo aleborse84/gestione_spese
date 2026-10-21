@@ -1485,6 +1485,15 @@ body.is-local #offlineModeBtn {
     color: var(--income) !important;
 }
 
+/* Zona pericolosa */
+.danger-zone {
+    border-color: var(--expense-bg);
+}
+
+.danger-zone .panel-header h2 {
+    color: var(--expense);
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .sidebar {

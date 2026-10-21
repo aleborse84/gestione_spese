@@ -1237,6 +1237,91 @@ function refreshCurrent() {
 }
 
 // ============================================
+// ELIMINA DATI / ELIMINA ACCOUNT CON CONFERMA PASSWORD
+// ============================================
+let pendingAction = null; // 'clearData' o 'deleteAccount'
+
+$("clearAllDataBtn").addEventListener("click", () => {
+  pendingAction = "clearData";
+  $("confirmModalTitle").textContent = "⚠️ Elimina tutti i dati";
+  $("confirmModalDesc").textContent =
+    "Questa azione eliminerà tutti i tuoi movimenti, categorie, conti e debiti. L'account rimarrà attivo. Inserisci la password per confermare.";
+  $("confirmSubmitBtn").style.background = "var(--expense)";
+  $("confirmPasswordInput").value = "";
+  $("confirmError").textContent = "";
+  $("confirmPasswordModal").classList.add("active");
+});
+
+$("deleteAccountBtn").addEventListener("click", () => {
+  pendingAction = "deleteAccount";
+  $("confirmModalTitle").textContent = " Elimina account definitivamente";
+  $("confirmModalDesc").textContent =
+    "Questa azione è IRREVERSIBILE. Il tuo account e tutti i dati associati verranno eliminati per sempre. Inserisci la password per confermare.";
+  $("confirmSubmitBtn").style.background = "var(--expense)";
+  $("confirmPasswordInput").value = "";
+  $("confirmError").textContent = "";
+  $("confirmPasswordModal").classList.add("active");
+});
+
+$("confirmPasswordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const password = $("confirmPasswordInput").value;
+  const user = auth.currentUser;
+
+  if (!user || !user.email) {
+    $("confirmError").textContent = "Utente non autenticato";
+    return;
+  }
+
+  try {
+    $("confirmError").textContent = " Verifica in corso...";
+
+    // Reautenticazione Firebase (obbligatoria per operazioni sensibili)
+    const credential = firebase.auth.EmailAuthProvider.credential(
+      user.email,
+      password,
+    );
+    await user.reauthenticateWithCredential(credential);
+
+    $("confirmError").textContent = "";
+
+    if (pendingAction === "clearData") {
+      // Elimina solo i dati dal database, mantiene l'account
+      await db.ref("users/" + user.uid).remove();
+      alert(
+        "✅ Tutti i dati sono stati eliminati. L'app verrà ricaricata con i dati di default.",
+      );
+      location.reload();
+    } else if (pendingAction === "deleteAccount") {
+      // Elimina prima i dati, poi l'account
+      await db.ref("users/" + user.uid).remove();
+      await user.delete();
+      alert("✅ Account eliminato definitivamente.");
+      // onAuthStateChanged gestirà il logout automatico
+    }
+
+    $("confirmPasswordModal").classList.remove("active");
+  } catch (err) {
+    if (
+      err.code === "auth/wrong-password" ||
+      err.code === "auth/invalid-credential"
+    ) {
+      $("confirmError").textContent = "❌ Password errata. Riprova.";
+    } else if (err.code === "auth/requires-recent-login") {
+      $("confirmError").textContent =
+        "⚠️ Per sicurezza, fai logout e rientra, poi riprova.";
+    } else {
+      $("confirmError").textContent = "Errore: " + (err.message || err.code);
+    }
+  }
+});
+
+$("cancelConfirmBtn").addEventListener("click", () => {
+  $("confirmPasswordModal").classList.remove("active");
+  pendingAction = null;
+});
+
+// ============================================
 // INIT
 // ============================================
 initTheme();
