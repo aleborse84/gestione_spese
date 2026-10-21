@@ -311,6 +311,7 @@ async function loadProfiles(uid) {
     const snapshot = await db.ref("users/" + uid + "/profiles").once("value");
     const profilesData = snapshot.val() || {};
     state.profiles = profilesData;
+
     if (Object.keys(profilesData).length === 0) {
       const defaultProfileId = genId();
       await db.ref("users/" + uid + "/profiles/" + defaultProfileId).set({
@@ -322,6 +323,7 @@ async function loadProfiles(uid) {
         [defaultProfileId]: { name: "Personale", color: "#4f46e5" },
       };
     }
+
     const savedProfileId = localStorage.getItem("abt_currentProfile_" + uid);
     const profileIds = Object.keys(state.profiles);
     state.currentProfileId =
@@ -329,10 +331,11 @@ async function loadProfiles(uid) {
         ? savedProfileId
         : profileIds[0];
     localStorage.setItem("abt_currentProfile_" + uid, state.currentProfileId);
+
     subscribeProfileData(uid, state.currentProfileId);
     updateProfileUI();
   } catch (err) {
-    console.error("Errore caricamento profili:", err);
+    console.error("Errore caricamento profili: ", err);
   }
 }
 
@@ -341,7 +344,7 @@ function subscribeProfileData(uid, profileId) {
   state.dataRef = db.ref("users/" + uid + "/profiles/" + profileId);
   const listener = state.dataRef.on("value", (snapshot) => {
     const raw = snapshot.val();
-    if (!raw) {
+    if (!raw || !raw.categories) {
       state.dataRef.set({
         movements: {},
         categories: arrayToObject(DEFAULT_CATEGORIES),
@@ -451,16 +454,58 @@ $("addProfileBtn2").addEventListener("click", () => {
   $("profileModal").classList.add("active");
 });
 
+// CORREZIONE PRINCIPALE: Logica di salvataggio profilo online ripristinata
 $("profileForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const profileId = $("profileId").value || genId();
   const name = $("profileName").value.trim();
   const color = $("profileColor").value;
+
+  if (state.isOffline) {
+    if (state.profiles[profileId]) {
+      state.profiles[profileId] = { ...state.profiles[profileId], name, color };
+    } else {
+      state.profiles[profileId] = {
+        name,
+        color,
+        movements: [],
+        categories: [...DEFAULT_CATEGORIES],
+        accounts: [...DEFAULT_ACCOUNTS],
+        debts: [],
+      };
+    }
+    localStorage.setItem(
+      "abt_offline_profiles",
+      JSON.stringify(state.profiles),
+    );
+    if (!$("profileId").value) {
+      await switchProfile(profileId);
+    } else {
+      updateProfileUI();
+    }
+    $("profileModal").classList.remove("active");
+    return;
+  }
+
+  // ONLINE: Salva o aggiorna il profilo nel database
   await db.ref("users/" + state.currentUser + "/profiles/" + profileId).update({
     name,
     color,
     updatedAt: firebase.database.ServerValue.TIMESTAMP,
   });
+
+  // Se è un nuovo profilo, inizializza la sua struttura dati
+  if (!$("profileId").value) {
+    await db
+      .ref("users/" + state.currentUser + "/profiles/" + profileId)
+      .update({
+        movements: {},
+        categories: arrayToObject(DEFAULT_CATEGORIES),
+        accounts: arrayToObject(DEFAULT_ACCOUNTS),
+        debts: {},
+      });
+  }
+
   state.profiles[profileId] = { name, color };
   if (!$("profileId").value) {
     await switchProfile(profileId);
@@ -469,6 +514,7 @@ $("profileForm").addEventListener("submit", async (e) => {
   }
   $("profileModal").classList.remove("active");
 });
+
 $("cancelProfileBtn").addEventListener("click", () =>
   $("profileModal").classList.remove("active"),
 );

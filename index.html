@@ -23,7 +23,6 @@
         <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     </head>
     <body>
-        <!-- SCHERMATA LOGIN -->
         <div class="auth-screen" id="authScreen">
             <div class="auth-container">
                 <div class="auth-logo">
@@ -105,7 +104,6 @@
         <div class="app">
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-            <!-- Sidebar -->
             <aside class="sidebar">
                 <div class="logo"><span class="logo-ab">AB TRACKER</span></div>
                 <div class="theme-toggle-sidebar">
@@ -139,7 +137,6 @@
                 </div>
             </aside>
 
-            <!-- Main -->
             <main class="main">
                 <header class="topbar">
                     <button class="menu-toggle" id="menuToggle">
@@ -180,7 +177,6 @@
                 </header>
 
                 <div class="content">
-                    <!-- DASHBOARD -->
                     <section class="section active" id="section-dashboard">
                         <div class="month-badge" id="dashMonthBadge">
                             Mese corrente
@@ -223,7 +219,6 @@
                         </div>
                     </section>
 
-                    <!-- MOVIMENTI -->
                     <section class="section" id="section-movements">
                         <div class="summary-grid">
                             <div class="summary-card income">
@@ -271,7 +266,6 @@
                         <div class="movements-list" id="movementsList"></div>
                     </section>
 
-                    <!-- CATEGORIE -->
                     <section class="section" id="section-categories">
                         <div class="panel">
                             <div class="panel-header">
@@ -317,7 +311,6 @@
                         </div>
                     </section>
 
-                    <!-- CONTI -->
                     <section class="section" id="section-accounts">
                         <div class="panel">
                             <div class="panel-header">
@@ -330,7 +323,6 @@
                         </div>
                     </section>
 
-                    <!-- DEBITI & CREDITI -->
                     <section class="section" id="section-debts">
                         <div class="summary-grid debts-summary">
                             <div class="summary-card debt">
@@ -381,7 +373,6 @@
                         </div>
                     </section>
 
-                    <!-- IMPOSTAZIONI -->
                     <section class="section" id="section-settings">
                         <div class="panel">
                             <div class="panel-header"><h2>Aspetto</h2></div>
@@ -492,7 +483,6 @@
                 </div>
             </main>
 
-            <!-- Bottom Nav mobile -->
             <nav class="bottom-nav">
                 <button class="nav-link active" data-section="dashboard">
                     <i class="fas fa-chart-pie"></i><span>Home</span>
@@ -508,7 +498,7 @@
                 </button>
             </nav>
 
-            <!-- MODAL: Movimento -->
+            <!-- MODALS -->
             <div class="modal" id="movementModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -592,7 +582,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Dettaglio Movimento -->
             <div class="modal" id="viewModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -627,7 +616,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Categoria -->
             <div class="modal" id="categoryModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -699,7 +687,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Conto -->
             <div class="modal" id="accountModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -769,7 +756,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Debito -->
             <div class="modal" id="debtModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -846,7 +832,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Pagamento -->
             <div class="modal" id="paymentModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -885,7 +870,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Profilo -->
             <div class="modal" id="profileModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
@@ -927,7 +911,6 @@
                 </div>
             </div>
 
-            <!-- MODAL: Conferma Password -->
             <div class="modal" id="confirmPasswordModal">
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
