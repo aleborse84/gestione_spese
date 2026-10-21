@@ -1,6 +1,5 @@
 // ============================================
 // CONFIGURAZIONE FIREBASE
-// ️ INSERISCI QUI LE TUE CHIAVI
 // ============================================
 const firebaseConfig = {
   apiKey: "AIzaSyD_tWdvjxOCFfbPADpGGzSfJ6MRz4O3rzM",
@@ -12,7 +11,6 @@ const firebaseConfig = {
   messagingSenderId: "375465380274",
   appId: "1:375465380274:web:e77fe88204c8a4fbe87cab",
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
@@ -24,7 +22,7 @@ const DEFAULT_CATEGORIES = [
   {
     id: "cat1",
     name: "Alimentari",
-    icon: "",
+    icon: "🛒",
     color: "#10b981",
     type: "expense",
   },
@@ -162,7 +160,6 @@ $("themeToggle").addEventListener("change", (e) =>
 // ============================================
 const sidebar = document.querySelector(".sidebar");
 const sidebarOverlay = $("sidebarOverlay");
-
 function navigateTo(section) {
   state.currentSection = section;
   document
@@ -211,7 +208,6 @@ sidebarOverlay.addEventListener("click", () => {
 // AUTH & LOGIN
 // ============================================
 let authMode = "login";
-
 $("authSwitchBtn").addEventListener("click", () => {
   authMode = authMode === "login" ? "register" : "login";
   if (authMode === "login") {
@@ -270,7 +266,7 @@ $("forgotPasswordBtn").addEventListener("click", async () => {
     return;
   }
   try {
-    $("authError").textContent = " Invio email in corso...";
+    $("authError").textContent = "⏳ Invio email in corso...";
     await auth.sendPasswordResetEmail(email);
     $("authError").textContent =
       "✅ Email inviata! Controlla la casella di posta.";
@@ -387,15 +383,10 @@ async function switchProfile(profileId) {
 function updateProfileUI() {
   const profile = state.profiles[state.currentProfileId];
   if (!profile) return;
-
-  // Aggiorna pallino colorato e nome nell'header
   $("profileDot").style.background = profile.color;
   $("userName").textContent = profile.name;
-
-  // Aggiorna email nel dropdown (solo in basso)
   if ($("dropdownEmail"))
     $("dropdownEmail").textContent = state.currentEmail || "";
-
   renderProfilesDropdown();
   renderProfilesSettings();
 }
@@ -425,7 +416,6 @@ function renderProfilesSettings() {
 }
 
 window.switchProfile = switchProfile;
-
 window.editProfile = (profileId) => {
   const p = state.profiles[profileId];
   if (!p) return;
@@ -435,7 +425,6 @@ window.editProfile = (profileId) => {
   $("profileColor").value = p.color;
   $("profileModal").classList.add("active");
 };
-
 window.deleteProfile = async (profileId) => {
   const profileIds = Object.keys(state.profiles);
   if (profileIds.length <= 1) {
@@ -480,11 +469,9 @@ $("profileForm").addEventListener("submit", async (e) => {
   }
   $("profileModal").classList.remove("active");
 });
-
 $("cancelProfileBtn").addEventListener("click", () =>
   $("profileModal").classList.remove("active"),
 );
-
 $("userBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   $("userDropdown").classList.toggle("active");
@@ -679,39 +666,6 @@ window.deleteProfile = async (profileId) => {
   return _origDeleteProfile(profileId);
 };
 
-const _origProfileSubmit = $("profileForm").onsubmit;
-$("profileForm").addEventListener("submit", async (e) => {
-  if (state.isOffline) {
-    e.preventDefault();
-    const profileId = $("profileId").value || genId();
-    const name = $("profileName").value.trim();
-    const color = $("profileColor").value;
-    if (state.profiles[profileId]) {
-      state.profiles[profileId] = { ...state.profiles[profileId], name, color };
-    } else {
-      state.profiles[profileId] = {
-        name,
-        color,
-        movements: [],
-        categories: [...DEFAULT_CATEGORIES],
-        accounts: [...DEFAULT_ACCOUNTS],
-        debts: [],
-      };
-    }
-    localStorage.setItem(
-      "abt_offline_profiles",
-      JSON.stringify(state.profiles),
-    );
-    if (!$("profileId").value) {
-      await switchProfile(profileId);
-    } else {
-      updateProfileUI();
-    }
-    $("profileModal").classList.remove("active");
-    return;
-  }
-});
-
 $("clearAllDataBtn").addEventListener("click", () => {
   if (state.isOffline) {
     if (!confirm("Eliminare tutti i dati di questo profilo offline?")) return;
@@ -725,10 +679,117 @@ $("clearAllDataBtn").addEventListener("click", () => {
     refreshCurrent();
     return;
   }
+  pendingAction = "clearData";
+  $("confirmModalTitle").textContent = "⚠️ Elimina tutti i dati";
+  $("confirmModalDesc").textContent =
+    "Eliminerà movimenti, categorie, conti e debiti di questo profilo. Gli altri profili rimarranno intatti.";
+  $("confirmPasswordInput").value = "";
+  $("confirmError").textContent = "";
+  $("confirmPasswordModal").classList.add("active");
+});
+
+$("deleteAccountBtn").addEventListener("click", () => {
+  if (state.isOffline) return;
+  pendingAction = "deleteAccount";
+  $("confirmModalTitle").textContent = "🚨 Elimina account";
+  $("confirmModalDesc").textContent =
+    "IRREVERSIBILE. Account, tutti i profili e tutti i dati verranno persi per sempre.";
+  $("confirmPasswordInput").value = "";
+  $("confirmError").textContent = "";
+  $("confirmPasswordModal").classList.add("active");
+});
+
+$("confirmPasswordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const password = $("confirmPasswordInput").value;
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    $("confirmError").textContent = "Verifica...";
+    const credential = firebase.auth.EmailAuthProvider.credential(
+      user.email,
+      password,
+    );
+    await user.reauthenticateWithCredential(credential);
+    if (pendingAction === "clearData") {
+      await db
+        .ref("users/" + user.uid + "/profiles/" + state.currentProfileId)
+        .remove();
+      alert("Dati del profilo eliminati.");
+      location.reload();
+    } else if (pendingAction === "deleteAccount") {
+      await db.ref("users/" + user.uid).remove();
+      await user.delete();
+      alert("Account eliminato.");
+    }
+    $("confirmPasswordModal").classList.remove("active");
+  } catch (err) {
+    $("confirmError").textContent =
+      err.code === "auth/wrong-password"
+        ? "Password errata"
+        : "Errore: " + err.message;
+  }
+});
+$("cancelConfirmBtn").addEventListener("click", () =>
+  $("confirmPasswordModal").classList.remove("active"),
+);
+
+// ============================================
+// IMPORT/EXPORT
+// ============================================
+$("exportBtn").addEventListener("click", () => {
+  if (!state.data) return;
+  const data = {
+    email: state.currentEmail,
+    uid: state.currentUser,
+    profileId: state.currentProfileId,
+    profileName: state.profiles[state.currentProfileId]?.name,
+    exportedAt: new Date().toISOString(),
+    movements: state.data.movements,
+    categories: state.data.categories,
+    accounts: state.data.accounts,
+    debts: state.data.debts,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `abtracker_${state.profiles[state.currentProfileId]?.name}_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+});
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm("Sostituire i dati del profilo attuale?")) return;
+      state.data = {
+        movements: data.movements || [],
+        categories: data.categories || [...DEFAULT_CATEGORIES],
+        accounts: data.accounts || [...DEFAULT_ACCOUNTS],
+        debts: data.debts || [],
+      };
+      await Promise.all([
+        saveMovements(),
+        saveCategories(),
+        saveAccounts(),
+        saveDebts(),
+      ]);
+      alert("Dati importati!");
+    } catch (err) {
+      alert("File non valido");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
 });
 
 // ============================================
-// DASHBOARD
+// DASHBOARD & MOVIMENTI
 // ============================================
 function renderDashboard() {
   if (!state.data) {
@@ -763,16 +824,12 @@ function renderDashboard() {
   attachMovementListeners(list);
 }
 
-// ============================================
-// MOVIMENTI
-// ============================================
 function movementHTML(m) {
   const cat = getCategory(m.categoryId);
   const acc = getAccount(m.accountId);
   const sign = m.type === "income" ? "+" : "-";
   return `<div class="movement-item" data-id="${m.id}"><div class="mv-icon ${m.type}">${cat.icon}</div><div class="mv-info"><div class="mv-top"><span class="mv-title">${m.description}</span><span class="mv-badge ${m.type}">${m.type === "income" ? "ENTRATA" : "USCITA"}</span></div><div class="mv-details"><span class="cat-dot" style="background:${cat.color};width:6px;height:6px;border-radius:50%;display:inline-block"></span>${cat.name} • ${acc.name} • ${formatDate(m.date)}</div></div><div class="mv-amount ${m.type}">${sign} ${formatMoney(m.amount)}</div></div>`;
 }
-
 function attachMovementListeners(container) {
   container
     .querySelectorAll(".movement-item")
@@ -818,7 +875,6 @@ function renderMovements() {
     : '<div class="empty-state"><i class="fas fa-receipt"></i><p>Nessun movimento</p></div>';
   attachMovementListeners(container);
 }
-
 $("searchInput").addEventListener("input", renderMovements);
 $("filterType").addEventListener("change", renderMovements);
 $("filterMonth").addEventListener("change", renderMovements);
@@ -1232,120 +1288,6 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
       icon.classList.add("fa-eye");
     }
   });
-});
-
-// ============================================
-// ELIMINA DATI / ACCOUNT
-// ============================================
-let pendingAction = null;
-$("clearAllDataBtn").addEventListener("click", () => {
-  if (state.isOffline) return;
-  pendingAction = "clearData";
-  $("confirmModalTitle").textContent = "⚠️ Elimina tutti i dati";
-  $("confirmModalDesc").textContent =
-    "Eliminerà movimenti, categorie, conti e debiti di questo profilo. Gli altri profili rimarranno intatti.";
-  $("confirmPasswordInput").value = "";
-  $("confirmError").textContent = "";
-  $("confirmPasswordModal").classList.add("active");
-});
-$("deleteAccountBtn").addEventListener("click", () => {
-  if (state.isOffline) return;
-  pendingAction = "deleteAccount";
-  $("confirmModalTitle").textContent = "🚨 Elimina account";
-  $("confirmModalDesc").textContent =
-    "IRREVERSIBILE. Account, tutti i profili e tutti i dati verranno persi per sempre.";
-  $("confirmPasswordInput").value = "";
-  $("confirmError").textContent = "";
-  $("confirmPasswordModal").classList.add("active");
-});
-
-$("confirmPasswordForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const password = $("confirmPasswordInput").value;
-  const user = auth.currentUser;
-  if (!user) return;
-  try {
-    $("confirmError").textContent = "Verifica...";
-    const credential = firebase.auth.EmailAuthProvider.credential(
-      user.email,
-      password,
-    );
-    await user.reauthenticateWithCredential(credential);
-    if (pendingAction === "clearData") {
-      await db
-        .ref("users/" + user.uid + "/profiles/" + state.currentProfileId)
-        .remove();
-      alert("Dati del profilo eliminati.");
-      location.reload();
-    } else if (pendingAction === "deleteAccount") {
-      await db.ref("users/" + user.uid).remove();
-      await user.delete();
-      alert("Account eliminato.");
-    }
-    $("confirmPasswordModal").classList.remove("active");
-  } catch (err) {
-    $("confirmError").textContent =
-      err.code === "auth/wrong-password"
-        ? "Password errata"
-        : "Errore: " + err.message;
-  }
-});
-$("cancelConfirmBtn").addEventListener("click", () =>
-  $("confirmPasswordModal").classList.remove("active"),
-);
-
-// ============================================
-// IMPORT/EXPORT
-// ============================================
-$("exportBtn").addEventListener("click", () => {
-  if (!state.data) return;
-  const data = {
-    email: state.currentEmail,
-    uid: state.currentUser,
-    profileId: state.currentProfileId,
-    profileName: state.profiles[state.currentProfileId]?.name,
-    exportedAt: new Date().toISOString(),
-    movements: state.data.movements,
-    categories: state.data.categories,
-    accounts: state.data.accounts,
-    debts: state.data.debts,
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json",
-  });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `abtracker_${state.profiles[state.currentProfileId]?.name}_${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-});
-$("importBtn").addEventListener("click", () => $("importFile").click());
-$("importFile").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (!confirm("Sostituire i dati del profilo attuale?")) return;
-      state.data = {
-        movements: data.movements || [],
-        categories: data.categories || [...DEFAULT_CATEGORIES],
-        accounts: data.accounts || [...DEFAULT_ACCOUNTS],
-        debts: data.debts || [],
-      };
-      await Promise.all([
-        saveMovements(),
-        saveCategories(),
-        saveAccounts(),
-        saveDebts(),
-      ]);
-      alert("Dati importati!");
-    } catch (err) {
-      alert("File non valido");
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
 });
 
 // ============================================

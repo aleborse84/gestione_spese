@@ -293,7 +293,6 @@ body.is-local #offlineModeBtn:hover {
 .user-selector {
     position: relative;
 }
-
 .profile-trigger {
     padding: 8px 14px 8px 10px;
     border-radius: 20px;
@@ -303,11 +302,11 @@ body.is-local #offlineModeBtn:hover {
     background: var(--bg);
     border: 1px solid var(--border);
     transition: all 0.2s;
+    cursor: pointer;
 }
 .profile-trigger:hover {
     background: var(--border);
 }
-
 .profile-dot-inline {
     width: 10px;
     height: 10px;
@@ -315,7 +314,6 @@ body.is-local #offlineModeBtn:hover {
     flex-shrink: 0;
     background: var(--primary);
 }
-
 .profile-trigger .user-name {
     font-weight: 600;
     font-size: 14px;
@@ -325,7 +323,6 @@ body.is-local #offlineModeBtn:hover {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .profile-trigger i.fa-chevron-down {
     position: static;
     background: none;
@@ -335,7 +332,6 @@ body.is-local #offlineModeBtn:hover {
     font-size: 11px;
     color: var(--text-muted);
 }
-
 .user-avatar {
     display: none;
 }
@@ -354,9 +350,6 @@ body.is-local #offlineModeBtn:hover {
 }
 .user-dropdown.active {
     display: block;
-}
-.dropdown-header {
-    padding: 12px 14px 8px;
 }
 .dropdown-divider {
     height: 1px;
@@ -381,7 +374,6 @@ body.is-local #offlineModeBtn:hover {
 #profilesList .profile-dropdown-item.active {
     background: var(--primary-light);
 }
-
 .profile-dot {
     width: 10px;
     height: 10px;
@@ -1369,7 +1361,6 @@ input:checked + .slider:before {
         min-width: 120px;
     }
 }
-
 @media (min-width: 769px) {
     .modal {
         align-items: center;
