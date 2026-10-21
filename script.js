@@ -147,12 +147,14 @@ function navigateTo(section) {
     .querySelectorAll(".section")
     .forEach((s) => s.classList.remove("active"));
   $("section-" + section).classList.add("active");
+
   document
     .querySelectorAll(".nav-link")
     .forEach((n) => n.classList.remove("active"));
   document
     .querySelectorAll(`.nav-link[data-section="${section}"]`)
     .forEach((n) => n.classList.add("active"));
+
   const titles = {
     dashboard: "Dashboard",
     movements: "Movimenti",
@@ -162,8 +164,12 @@ function navigateTo(section) {
     settings: "Impostazioni",
   };
   $("pageTitle").textContent = titles[section];
+
   refreshCurrent();
-  document.querySelector(".sidebar").classList.remove("open");
+
+  // Chiudi sidebar E overlay su mobile
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("active");
 }
 document
   .querySelectorAll(".nav-link")
@@ -175,9 +181,21 @@ document
   .forEach((btn) =>
     btn.addEventListener("click", () => navigateTo(btn.dataset.goto)),
   );
-$("menuToggle").addEventListener("click", () =>
-  document.querySelector(".sidebar").classList.toggle("open"),
-);
+
+// Gestione apertura/chiusura sidebar e overlay
+const sidebar = document.querySelector(".sidebar");
+const sidebarOverlay = $("sidebarOverlay");
+
+$("menuToggle").addEventListener("click", () => {
+  sidebar.classList.toggle("open");
+  sidebarOverlay.classList.toggle("active");
+});
+
+// Chiudi sidebar cliccando sull'overlay
+sidebarOverlay.addEventListener("click", () => {
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("active");
+});
 
 // ============ UTENTI ============
 function updateUserDisplay() {

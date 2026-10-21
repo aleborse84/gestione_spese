@@ -1353,6 +1353,30 @@ input:checked + .slider:before {
     min-height: 18px;
 }
 
+/* ==========================================
+   SIDEBAR OVERLAY (MOBILE)
+   ========================================== */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px); /* Leggero effetto sfocato */
+    z-index: 45; /* Sopra il main (40), sotto la sidebar (50) */
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .sidebar {
