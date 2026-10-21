@@ -610,7 +610,7 @@ $("debtForm").addEventListener("submit", async (e) => {
   await saveDebts(); $("debtModal").classList.remove("active");
 });
 
-function populateCategorySelect() { const sel = $("mvCategory"); sel.innerHTML = state.data.categories.filter((c) => c.type === state.currentType).map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join("") || '<option value="">Nessuna</option>'; }
+function populateCategorySelect() { const sel = $("mvCategory"); sel.innerHTML = state.data.categories .filter((c) => c.type === state.currentType) .sort((a, b) => a.name.localeCompare(b.name, "it")) .map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`) .join("") || '<option value="">Nessuna</option>'; }
 function populateAccountSelect() { const sel = $("mvAccount"); sel.innerHTML = state.data.accounts.length ? state.data.accounts.map((a) => `<option value="${a.id}">${a.icon} ${a.name}</option>`).join("") : '<option value="">Nessun conto</option>'; }
 
 function openMovementModal(id = null) {
