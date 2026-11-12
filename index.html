@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AB Tracker</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -65,7 +65,7 @@
             <button class="nav-link" data-section="movements"><i class="fas fa-exchange-alt"></i> Movimenti</button>
             <button class="nav-link" data-section="categories"><i class="fas fa-tags"></i> Categorie</button>
             <button class="nav-link" data-section="accounts"><i class="fas fa-wallet"></i> Conti</button>
-            <button class="nav-link" data-section="debts"><i class="fas fa-hand-holding-usd"></i> Debiti &amp; Crediti</button>
+            <button class="nav-link" data-section="debts"><i class="fas fa-hand-holding-usd"></i> Debiti & Crediti</button>
             <button class="nav-link" data-section="settings"><i class="fas fa-cog"></i> Impostazioni</button>
         </nav>
         <div class="sidebar-footer"><span class="version">© AB Lab • Borsetto Alessio • v1.0</span></div>
@@ -144,7 +144,7 @@
 
             <section class="section" id="section-accounts">
                 <div class="panel">
-                    <div class="panel-header"><h2>Conti &amp; Carte</h2><button class="btn-primary" id="addAccountBtn"><i class="fas fa-plus"></i> Nuovo</button></div>
+                    <div class="panel-header"><h2>Conti & Carte</h2><button class="btn-primary" id="addAccountBtn"><i class="fas fa-plus"></i> Nuovo</button></div>
                     <div class="accounts-grid" id="accountsGrid"></div>
                 </div>
             </section>
@@ -156,7 +156,7 @@
                     <div class="summary-card net"><div class="sc-header"><i class="fas fa-balance-scale"></i><span class="sc-label">Saldo Netto</span></div><div class="sc-amount" id="dashNet">€ 0,00</div><div class="sc-sublabel" id="dashNetLabel">Crediti − Debiti</div></div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><h2>Lista Debiti &amp; Crediti</h2><button class="btn-primary" id="addDebtBtn"><i class="fas fa-plus"></i> Nuovo</button></div>
+                    <div class="panel-header"><h2>Lista Debiti & Crediti</h2><button class="btn-primary" id="addDebtBtn"><i class="fas fa-plus"></i> Nuovo</button></div>
                     <div class="debts-list" id="debtsList"></div>
                 </div>
             </section>
@@ -207,6 +207,7 @@
         <button class="nav-link" data-section="settings"><i class="fas fa-cog"></i><span>Impost.</span></button>
     </nav>
 
+    <!-- MODALS -->
     <div class="modal" id="movementModal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -296,7 +297,6 @@
         </div>
     </div>
 
-    <!-- MODAL: Pagamento -->
     <div class="modal" id="paymentModal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
