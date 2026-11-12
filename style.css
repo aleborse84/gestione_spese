@@ -228,7 +228,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 .modal { display: none; position: fixed; inset: 0; z-index: 1000; justify-content: center; align-items: flex-end; }
 .modal.active { display: flex; }
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-.modal-content { position: relative; background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 24px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; z-index: 1; }
+.modal-content { position: relative; background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 24px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.3s ease; z-index: 1; -webkit-overflow-scrolling: touch; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .modal-header h3 { font-size: 18px; font-weight: 700; }
@@ -291,6 +291,10 @@ input:checked + .slider:before { transform: translateX(24px); }
     .form-row { grid-template-columns: 1fr; }
     .toolbar { flex-wrap: wrap; }
     .filter-select { flex: 1 1 calc(50% - 6px); min-width: 120px; }
+    .modal { align-items: flex-end !important; padding: 0 !important; }
+    .modal-content { max-height: 85vh !important; border-radius: 20px 20px 0 0 !important; padding: 20px !important; }
+    .modal-content::-webkit-scrollbar { width: 4px; }
+    .modal-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 }
 @media (min-width: 769px) {
     .modal { align-items: center; padding: 20px; }
