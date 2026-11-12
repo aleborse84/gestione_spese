@@ -251,7 +251,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 .modal-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
 .btn-cancel, .btn-save, .btn-edit, .btn-delete, .btn-primary { padding: 12px 18px; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font-text); }
 .btn-cancel { background: var(--bg); color: var(--text-muted); flex: 1; }
-.btn-save, .btn-primary { background: var(--primary); color: white; flex: 1; }
+.btn-save, .btn-primary { background: var(--primary); color: white; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-edit { background: var(--primary-light); color: var(--primary); flex: 1; }
 .btn-delete { background: var(--expense-bg); color: var(--expense); flex: 1; }
 .btn-cancel:hover { background: var(--border); }

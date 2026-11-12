@@ -505,6 +505,8 @@ function attachMovementListeners(container) { container.querySelectorAll(".movem
 
 function renderMovements() {
   if (!state.data) return;
+  populateMonthFilter();
+  populateYearFilter();
   const search = $("searchInput").value.toLowerCase();
   const typeFilter = $("filterType").value; const monthFilter = $("filterMonth").value; const yearFilter = $("filterYear").value;
   let list = [...state.data.movements];
@@ -527,16 +529,16 @@ $("filterYear").addEventListener("change", renderMovements);
 
 function renderCategories() {
   if (!state.data) return;
-  
+
   // Ordina le categorie per nome (A→Z) con supporto caratteri italiani
   const incomeCats = state.data.categories
     .filter((c) => c.type === "income")
     .sort((a, b) => a.name.localeCompare(b.name, "it"));
-  
+
   const expenseCats = state.data.categories
     .filter((c) => c.type === "expense")
     .sort((a, b) => a.name.localeCompare(b.name, "it"));
-  
+
   renderCategoryGrid("incomeCategoriesGrid", incomeCats);
   renderCategoryGrid("expenseCategoriesGrid", expenseCats);
 }
@@ -564,34 +566,245 @@ function renderAccounts() {
 }
 
 function renderDebts() {
-  if (!state.data) return;
-  const debts = state.data.debts.filter((d) => d.type === "debt");
-  const credits = state.data.debts.filter((d) => d.type === "credit");
-  const totalDebts = debts.reduce((s, d) => s + Math.max(0, d.totalAmount - d.paidAmount), 0);
-  const totalCredits = credits.reduce((s, d) => s + Math.max(0, d.totalAmount - d.paidAmount), 0);
-  const net = totalCredits - totalDebts;
-  $("dashDebts").textContent = formatMoney(totalDebts); $("dashCredits").textContent = formatMoney(totalCredits);
-  $("dashNet").textContent = (net >= 0 ? "+" : "") + formatMoney(net);
-  $("dashDebtsCount").textContent = `${debts.filter((d) => d.paidAmount < d.totalAmount).length} debiti aperti`;
-  $("dashCreditsCount").textContent = `${credits.filter((d) => d.paidAmount < d.totalAmount).length} crediti aperti`;
-  $("dashNetLabel").textContent = net >= 0 ? "Sei in attivo ✓" : "Sei in passivo ";
-  $("dashNet").style.color = net >= 0 ? "var(--income)" : "var(--expense)";
-  const list = $("debtsList");
-  if (state.data.debts.length === 0) { list.innerHTML = '<div class="empty-state"><i class="fas fa-hand-holding-usd"></i><p>Nessun debito/credito</p></div>'; return; }
-  list.innerHTML = state.data.debts.map((d) => {
-    const progress = Math.min(100, (d.paidAmount / d.totalAmount) * 100);
-    const remaining = Math.max(0, d.totalAmount - d.paidAmount);
-    const isCompleted = remaining === 0;
-    return `<div class="debt-item ${isCompleted ? "completed" : ""}"><div class="debt-header"><div class="debt-info"><div class="debt-person">${d.person} ${isCompleted ? '<span class="badge-completed">SALDATO</span>' : ""}</div><div class="debt-desc">${d.description} • ${formatDate(d.date)}</div></div><div class="debt-amount ${d.type}">${d.type === "debt" ? "Devo" : "Mi devono"}<br>${formatMoney(remaining)}</div></div><div class="debt-progress"><div class="progress-bar-bg"><div class="progress-bar-fill ${d.type}" style="width:${progress}%"></div></div><div class="progress-info"><span>${formatMoney(d.paidAmount)} di ${formatMoney(d.totalAmount)}</span><span class="progress-percent">${progress.toFixed(0)}%</span></div></div><div class="debt-actions">${!isCompleted ? `<button class="btn-action" onclick="openPaymentModal('${d.id}')" style="padding:8px 12px;font-size:12px"><i class="fas fa-plus"></i> Pagamento</button>` : ""}<button class="btn-action danger" onclick="deleteDebt('${d.id}')" style="padding:8px 12px;font-size:12px"><i class="fas fa-trash"></i></button></div></div>`;
-  }).join("");
+    if (!state.data) return;
+    const debts = state.data.debts.filter((d) => d.type === "debt");
+    const credits = state.data.debts.filter((d) => d.type === "credit");
+    const totalDebts = debts.reduce((s, d) => s + Math.max(0, d.totalAmount - d.paidAmount), 0);
+    const totalCredits = credits.reduce((s, d) => s + Math.max(0, d.totalAmount - d.paidAmount), 0);
+    const net = totalCredits - totalDebts;
+    $("dashDebts").textContent = formatMoney(totalDebts);
+    $("dashCredits").textContent = formatMoney(totalCredits);
+    $("dashNet").textContent = (net >= 0 ? "+" : "") + formatMoney(net);
+    $("dashDebtsCount").textContent = `${debts.filter((d) => d.paidAmount < d.totalAmount).length} debiti aperti`;
+    $("dashCreditsCount").textContent = `${credits.filter((d) => d.paidAmount < d.totalAmount).length} crediti aperti`;
+    $("dashNetLabel").textContent = net >= 0 ? "Sei in attivo ✓" : "Sei in passivo ⚠";
+    $("dashNet").style.color = net >= 0 ? "var(--income)" : "var(--expense)";
+    const list = $("debtsList");
+    if (state.data.debts.length === 0) {
+        list.innerHTML = '<div class="empty-state"><i class="fas fa-hand-holding-usd"></i><p>Nessun debito/credito</p></div>';
+        return;
+    }
+    list.innerHTML = state.data.debts.map((d) => {
+        const progress = Math.min(100, (d.paidAmount / d.totalAmount) * 100);
+        const remaining = Math.max(0, d.totalAmount - d.paidAmount);
+        const isCompleted = remaining === 0;
+        return `<div class="debt-item ${isCompleted ? "completed" : ""}" onclick="openDebtDetailModal('${d.id}')">
+            <div class="debt-header">
+                <div class="debt-info">
+                    <div class="debt-person">${d.person} ${isCompleted ? '<span class="badge-completed">SALDATO</span>' : ""}</div>
+                    <div class="debt-desc">${d.description} • ${formatDate(d.date)}</div>
+                </div>
+                <div class="debt-amount ${d.type}">${d.type === "debt" ? "Devo" : "Mi devono"}<br>${formatMoney(remaining)}</div>
+            </div>
+            <div class="debt-progress">
+                <div class="progress-bar-bg"><div class="progress-bar-fill ${d.type}" style="width:${progress}%"></div></div>
+                <div class="progress-info">
+                    <span>${formatMoney(d.paidAmount)} di ${formatMoney(d.totalAmount)}</span>
+                    <span class="progress-percent">${progress.toFixed(0)}%</span>
+                </div>
+            </div>
+            <div class="debt-actions" onclick="event.stopPropagation()">
+                ${!isCompleted ? `<button class="btn-action" onclick="openPaymentModal('${d.id}')" style="padding:8px 12px;font-size:12px"><i class="fas fa-plus"></i> Pagamento</button>` : ""}
+                <button class="btn-action danger" onclick="deleteDebt('${d.id}')" style="padding:8px 12px;font-size:12px"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join("");
 }
+
+// NUOVA FUNZIONE: apre il modal di dettaglio con lista pagamenti
+window.openDebtDetailModal = (debtId) => {
+    const debt = state.data.debts.find((d) => d.id === debtId);
+    if (!debt) return;
+
+    state.currentViewId = debtId;
+    const progress = Math.min(100, (debt.paidAmount / debt.totalAmount) * 100);
+    const remaining = Math.max(0, debt.totalAmount - debt.paidAmount);
+    const isDebt = debt.type === "debt";
+    const isCompleted = remaining === 0;
+
+    let paymentsHtml = '';
+    if (debt.payments && debt.payments.length > 0) {
+        paymentsHtml = debt.payments
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map((p) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+                    <div style="flex:1">
+                        <div style="font-size:13px;font-weight:600">${formatDate(p.date)}</div>
+                        ${p.note ? `<div style="font-size:12px;color:var(--text-muted)">${p.note}</div>` : ''}
+                    </div>
+                    <div style="font-family:var(--font-mono);font-weight:700;color:var(--income);font-size:15px;margin:0 12px">
+                        ${formatMoney(p.amount)}
+                    </div>
+                    <div style="display:flex;gap:6px">
+                        <button onclick="editPayment('${debtId}', '${p.id}')" style="background:var(--primary-light);color:var(--primary);border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px"><i class="fas fa-pen"></i></button>
+                        <button onclick="deletePayment('${debtId}', '${p.id}')" style="background:var(--expense-bg);color:var(--expense);border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+    } else {
+        paymentsHtml = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">Nessun pagamento registrato</div>';
+    }
+
+    $("viewContent").innerHTML = `
+        <div class="view-item">
+            <label>Importo totale</label>
+            <p class="amount-big" style="color:${isDebt ? 'var(--debt)' : 'var(--credit)'}">
+                ${formatMoney(debt.totalAmount)}
+            </p>
+        </div>
+        <div class="view-item">
+            <label>Tipo</label>
+            <p>${isDebt ? '💸 Debito (devo pagare)' : '💰 Credito (mi devono pagare)'}</p>
+        </div>
+        <div class="view-item">
+            <label>Persona</label>
+            <p>${debt.person}</p>
+        </div>
+        <div class="view-item">
+            <label>Descrizione</label>
+            <p>${debt.description}</p>
+        </div>
+        <div class="view-item">
+            <label>Data creazione</label>
+            <p>${formatDate(debt.date)}</p>
+        </div>
+        <div class="view-item">
+            <label>Stato pagamento</label>
+            <div class="progress-bar-bg" style="margin:10px 0">
+                <div class="progress-bar-fill ${debt.type}" style="width:${progress}%"></div>
+            </div>
+            <p style="font-size:13px">${formatMoney(debt.paidAmount)} di ${formatMoney(debt.totalAmount)} (${progress.toFixed(0)}%)</p>
+            <p style="font-size:13px;margin-top:6px">Rimanente: <strong style="color:${isDebt ? 'var(--debt)' : 'var(--credit)'}">${formatMoney(remaining)}</strong></p>
+        </div>
+        <div class="view-item" style="border-bottom:none">
+            <label>Storico pagamenti (${debt.payments ? debt.payments.length : 0})</label>
+            ${paymentsHtml}
+        </div>
+    `;
+
+    $("editFromViewBtn").style.display = 'none';
+    $("deleteFromViewBtn").style.display = 'none';
+
+    let payBtn = $("addPaymentFromViewBtn");
+    if (!payBtn) {
+        payBtn = document.createElement('button');
+        payBtn.type = 'button';
+        payBtn.className = 'btn-save';
+        payBtn.id = 'addPaymentFromViewBtn';
+        payBtn.innerHTML = '<i class="fas fa-plus"></i> Aggiungi pagamento';
+        payBtn.onclick = () => {
+            $("viewModal").classList.remove("active");
+            setTimeout(() => openPaymentModal(state.currentViewId), 200);
+        };
+        $("closeViewBtn").after(payBtn);
+    }
+    payBtn.style.display = isCompleted ? 'none' : 'inline-flex';
+
+    $("viewModal").classList.add("active");
+};
+
+window.editPayment = (debtId, paymentId) => {
+    const debt = state.data.debts.find((d) => d.id === debtId);
+    if (!debt || !debt.payments) return;
+
+    const payment = debt.payments.find((p) => p.id === paymentId);
+    if (!payment) return;
+
+    // Chiudi il modal di dettaglio
+    $("viewModal").classList.remove("active");
+
+    // Apri il modal di pagamento con i dati precompilati
+    setTimeout(() => {
+        $("paymentDebtId").value = debtId;
+        $("paymentAmount").value = payment.amount;
+        $("paymentDate").value = payment.date;
+        $("paymentNote").value = payment.note || '';
+
+        // Salva l'ID del pagamento da modificare (usiamo un campo hidden)
+        let editPaymentIdField = $("editPaymentId");
+        if (!editPaymentIdField) {
+            editPaymentIdField = document.createElement('input');
+            editPaymentIdField.type = 'hidden';
+            editPaymentIdField.id = 'editPaymentId';
+            $("paymentForm").appendChild(editPaymentIdField);
+        }
+        editPaymentIdField.value = paymentId;
+
+        // Cambia il titolo del modal
+        $("paymentModal").querySelector("h3").textContent = "Modifica Pagamento";
+
+        $("paymentModal").classList.add("active");
+    }, 200);
+};
+
+window.deletePayment = async (debtId, paymentId) => {
+    if (!confirm("Eliminare questo pagamento?")) return;
+
+    const debt = state.data.debts.find((d) => d.id === debtId);
+    if (!debt || !debt.payments) return;
+
+    const payment = debt.payments.find((p) => p.id === paymentId);
+    if (!payment) return;
+
+    // Rimuovi il pagamento e ricalcola il paidAmount
+    debt.payments = debt.payments.filter((p) => p.id !== paymentId);
+    debt.paidAmount = debt.payments.reduce((sum, p) => sum + p.amount, 0);
+
+    await saveDebts();
+
+    // Riapri il modal di dettaglio aggiornato
+    setTimeout(() => openDebtDetailModal(debtId), 200);
+};
 
 window.openPaymentModal = (debtId) => { $("paymentDebtId").value = debtId; $("paymentForm").reset(); $("paymentDate").valueAsDate = new Date(); $("paymentModal").classList.add("active"); };
 window.deleteDebt = async (debtId) => { if (confirm("Eliminare?")) { state.data.debts = state.data.debts.filter((d) => d.id !== debtId); await saveDebts(); } };
 $("paymentForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const debt = state.data.debts.find((d) => d.id === $("paymentDebtId").value);
-  if (debt) { debt.paidAmount = Math.min(debt.totalAmount, debt.paidAmount + parseFloat($("paymentAmount").value)); await saveDebts(); $("paymentModal").classList.remove("active"); }
+    e.preventDefault();
+    const debtId = $("paymentDebtId").value;
+    const editPaymentId = $("editPaymentId")?.value || null;
+    const amount = parseFloat($("paymentAmount").value);
+    const note = $("paymentNote").value.trim();
+    const date = $("paymentDate").value;
+
+    const debt = state.data.debts.find((d) => d.id === debtId);
+    if (!debt) return;
+
+    if (!debt.payments) debt.payments = [];
+
+    if (editPaymentId) {
+        // Modifica pagamento esistente
+        const payment = debt.payments.find((p) => p.id === editPaymentId);
+        if (payment) {
+            // Sottrai il vecchio importo
+            debt.paidAmount = Math.max(0, debt.paidAmount - payment.amount);
+            // Aggiorna i dati
+            payment.amount = amount;
+            payment.note = note;
+            payment.date = date;
+            // Aggiungi il nuovo importo
+            debt.paidAmount = Math.min(debt.totalAmount, debt.paidAmount + amount);
+        }
+        // Rimuovi il campo hidden
+        const editField = $("editPaymentId");
+        if (editField) editField.remove();
+    } else {
+        // Nuovo pagamento
+        debt.payments.push({
+            id: genId(),
+            amount,
+            note,
+            date
+        });
+        debt.paidAmount = Math.min(debt.totalAmount, debt.paidAmount + amount);
+    }
+
+    await saveDebts();
+    $("paymentModal").classList.remove("active");
+
+    // Riapri il modal di dettaglio se era aperto
+    if (state.currentViewId === debtId) {
+        setTimeout(() => openDebtDetailModal(debtId), 200);
+    }
 });
 
 $("addDebtBtn").addEventListener("click", () => {
@@ -603,14 +816,52 @@ document.querySelectorAll("#debtForm .type-btn").forEach((btn) => btn.addEventLi
   document.querySelectorAll("#debtForm .type-btn").forEach((b) => b.classList.remove("active")); btn.classList.add("active"); state.currentDebtType = btn.dataset.debttype;
 }));
 $("debtForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const debt = { id: $("debtId").value || genId(), type: state.currentDebtType, person: $("debtPerson").value.trim(), description: $("debtDescription").value.trim(), totalAmount: parseFloat($("debtTotal").value), paidAmount: parseFloat($("debtPaid").value) || 0, date: $("debtDate").value };
-  const idx = state.data.debts.findIndex((d) => d.id === debt.id);
-  if (idx !== -1) state.data.debts[idx] = debt; else state.data.debts.push(debt);
-  await saveDebts(); $("debtModal").classList.remove("active");
+    e.preventDefault();
+    const debt = {
+        id: $("debtId").value || genId(),
+        type: state.currentDebtType,
+        person: $("debtPerson").value.trim(),
+        description: $("debtDescription").value.trim(),
+        totalAmount: parseFloat($("debtTotal").value),
+        paidAmount: parseFloat($("debtPaid").value) || 0,
+        date: $("debtDate").value,
+        payments: []
+    };
+    const idx = state.data.debts.findIndex((d) => d.id === debt.id);
+    if (idx !== -1) state.data.debts[idx] = debt;
+    else state.data.debts.push(debt);
+    await saveDebts();
+    $("debtModal").classList.remove("active");
 });
 
-function populateCategorySelect() { const sel = $("mvCategory"); sel.innerHTML = state.data.categories .filter((c) => c.type === state.currentType) .sort((a, b) => a.name.localeCompare(b.name, "it")) .map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`) .join("") || '<option value="">Nessuna</option>'; }
+function populateCategorySelect() { const sel = $("mvCategory"); sel.innerHTML = state.data.categories.filter((c) => c.type === state.currentType).sort((a, b) => a.name.localeCompare(b.name, "it")).map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join("") || '<option value="">Nessuna</option>'; }
+function populateMonthFilter() {
+  const sel = $("filterMonth");
+  const current = sel.value;
+  const months = new Set();
+  state.data.movements.forEach((m) => {
+    const d = new Date(m.date);
+    months.add(d.getMonth());
+  });
+  const sorted = [...months].sort((a, b) => a - b);
+  sel.innerHTML = '<option value="all">Tutti i mesi</option>' +
+    sorted.map((m) => `<option value="${m}">${MONTHS_IT[m]}</option>`).join("");
+  sel.value = current;
+}
+
+function populateYearFilter() {
+  const sel = $("filterYear");
+  const current = sel.value;
+  const years = new Set();
+  state.data.movements.forEach((m) => {
+    const d = new Date(m.date);
+    years.add(d.getFullYear());
+  });
+  const sorted = [...years].sort((a, b) => b - a);
+  sel.innerHTML = '<option value="all">Tutti gli anni</option>' +
+    sorted.map((y) => `<option value="${y}">${y}</option>`).join("");
+  sel.value = current;
+}
 function populateAccountSelect() { const sel = $("mvAccount"); sel.innerHTML = state.data.accounts.length ? state.data.accounts.map((a) => `<option value="${a.id}">${a.icon} ${a.name}</option>`).join("") : '<option value="">Nessun conto</option>'; }
 
 function openMovementModal(id = null) {
@@ -643,11 +894,17 @@ $("movementForm").addEventListener("submit", async (e) => {
 function openViewModal(id) {
   const m = state.data.movements.find((x) => x.id === id); if (!m) return; state.currentViewId = id;
   const cat = getCategory(m.categoryId); const acc = getAccount(m.accountId); const isIncome = m.type === "income";
-  $("viewContent").innerHTML = `<div class="view-item"><label>Importo</label><p class="amount-big" style="color:${isIncome ? "var(--income)" : "var(--expense)"}">${isIncome ? "+" : "-"} ${formatMoney(m.amount)}</p></div><div class="view-item"><label>Tipo</label><p><span class="mv-badge ${m.type}">${isIncome ? "ENTRATA" : "USCITA"}</span></p></div><div class="view-item"><label>Descrizione</label><p>${m.description}</p></div><div class="view-item"><label>Categoria</label><p>${cat.icon} ${cat.name}</p></div><div class="view-item"><label>Conto</label><p>${acc.icon} ${acc.name}</p></div><div class="view-item"><label>Data</label><p>${formatDate(m.date)}</p></div>${m.notes ? `<div class="view-item"><label>Note</label><p style="font-weight:400;font-size:14px">${m.notes}</p></div>` : ""}`;
+  $("viewContent").innerHTML = `<div class="view-item"><label>Importo</label><p class="amount-big" style="color:${isIncome ? "var(--income)" : "var(--expense)"}">${isIncome ? "+" : "-"} ${formatMoney(m.amount)}</p></div><div class="view-item"><label>Tipo</label><p><span class="mv-badge ${m.type}">${isIncome ? "ENTRATA" : "USCITA"}</span></p></div><div class="view-item"><label>Da/A Chi</label><p>${m.description}</p></div><div class="view-item"><label>Categoria</label><p>${cat.icon} ${cat.name}</p></div><div class="view-item"><label>Conto</label><p>${acc.icon} ${acc.name}</p></div><div class="view-item"><label>Data</label><p>${formatDate(m.date)}</p></div>${m.notes ? `<div class="view-item"><label>Descrizione</label><p style="font-weight:400;font-size:14px">${m.notes}</p></div>` : ""}`;
   $("viewModal").classList.add("active");
 }
 $("editFromViewBtn").addEventListener("click", () => { $("viewModal").classList.remove("active"); setTimeout(() => openMovementModal(state.currentViewId), 200); });
-$("deleteFromViewBtn").addEventListener("click", async () => { if (confirm("Eliminare?")) { state.data.movements = state.data.movements.filter((m) => m.id !== state.currentViewId); await saveMovements(); $("viewModal").classList.remove("active"); } });
+$("deleteFromViewBtn").addEventListener("click", async () => {
+    if (confirm("Eliminare questo movimento?")) {
+        state.data.movements = state.data.movements.filter((m) => m.id !== state.currentViewId);
+        await saveMovements();
+        $("viewModal").classList.remove("active");
+    }
+});
 
 function openCategoryModal(id = null, defaultType = "expense") {
   if (id) {
@@ -698,9 +955,20 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
   });
 });
 
-function closeAllModals() { document.querySelectorAll(".modal").forEach((m) => m.classList.remove("active")); }
+function closeAllModals() {
+    document.querySelectorAll(".modal").forEach((m) => m.classList.remove("active"));
+    // Resetta il campo editPaymentId
+    const editField = $("editPaymentId");
+    if (editField) editField.remove();
+    // Resetta il titolo del modal pagamento
+    const paymentTitle = $("paymentModal")?.querySelector("h3");
+    if (paymentTitle) paymentTitle.textContent = "Aggiungi Pagamento";
+}
 document.querySelectorAll(".close-modal, .modal-overlay").forEach((el) => el.addEventListener("click", closeAllModals));
-["cancelMvBtn", "closeViewBtn", "cancelCatBtn", "cancelAccBtn", "cancelDebtBtn", "cancelPaymentBtn"].forEach((id) => $(id).addEventListener("click", closeAllModals));
+["cancelMvBtn", "closeViewBtn", "cancelCatBtn", "cancelAccBtn", "cancelDebtBtn", "cancelPaymentBtn", "cancelConfirmBtn"].forEach((id) => {
+    const btn = $(id);
+    if (btn) btn.addEventListener("click", closeAllModals);
+});
 
 $("fabAdd").addEventListener("click", () => {
   if (state.currentSection === "categories") $("addExpenseCategoryBtn").click();

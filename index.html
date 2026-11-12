@@ -218,12 +218,12 @@
                     <div class="form-group"><label for="mvAmount">Importo (€)</label><input type="number" id="mvAmount" step="0.01" min="0.01" required placeholder="0,00"></div>
                     <div class="form-group"><label for="mvDate">Data</label><input type="date" id="mvDate" required></div>
                 </div>
-                <div class="form-group"><label for="mvDescription">Descrizione</label><input type="text" id="mvDescription" required placeholder="Es. Spesa supermercato"></div>
+                <div class="form-group"><label for="mvDescription">Da/A Chi</label><input type="text" id="mvDescription" required placeholder="Es. Spesa supermercato"></div>
                 <div class="form-row">
                     <div class="form-group"><label for="mvCategory">Categoria</label><select id="mvCategory" required></select></div>
                     <div class="form-group"><label for="mvAccount">Conto</label><select id="mvAccount"></select></div>
                 </div>
-                <div class="form-group"><label for="mvNotes">Note</label><textarea id="mvNotes" rows="2"></textarea></div>
+                <div class="form-group"><label for="mvNotes">Descrizione</label><textarea id="mvNotes" rows="2"></textarea></div>
                 <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelMvBtn">Annulla</button><button type="submit" class="btn-save">Salva</button></div>
             </form>
         </div>
@@ -296,15 +296,29 @@
         </div>
     </div>
 
+    <!-- MODAL: Pagamento -->
     <div class="modal" id="paymentModal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
-            <div class="modal-header"><h3>Aggiungi Pagamento</h3><button class="close-modal">&times;</button></div>
+            <div class="modal-header"><h3 id="paymentModalTitle">Aggiungi Pagamento</h3><button class="close-modal">&times;</button></div>
             <form id="paymentForm">
                 <input type="hidden" id="paymentDebtId">
-                <div class="form-group"><label for="paymentAmount">Importo</label><input type="number" id="paymentAmount" step="0.01" min="0.01" required></div>
-                <div class="form-group"><label for="paymentDate">Data</label><input type="date" id="paymentDate" required></div>
-                <div class="modal-actions"><button type="button" class="btn-cancel" id="cancelPaymentBtn">Annulla</button><button type="submit" class="btn-save">Aggiungi</button></div>
+                <div class="form-group">
+                    <label for="paymentNote">Descrizione (opzionale)</label>
+                    <input type="text" id="paymentNote" placeholder="Es. Acconto, Prima rata, ecc.">
+                </div>
+                <div class="form-group">
+                    <label for="paymentAmount">Importo</label>
+                    <input type="number" id="paymentAmount" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentDate">Data</label>
+                    <input type="date" id="paymentDate" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="cancelPaymentBtn">Annulla</button>
+                    <button type="submit" class="btn-save">Salva</button>
+                </div>
             </form>
         </div>
     </div>
